@@ -37,6 +37,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -109,10 +110,17 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_main)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { root, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // The native root already keeps content outside system bars/cutouts.
+            // Zero those handled insets before they reach WebView to prevent
+            // duplicate CSS safe-area padding on recent Android System WebViews.
+            val handledTypes = WindowInsetsCompat.Type.systemBars() or
+                WindowInsetsCompat.Type.displayCutout()
+            val bars = insets.getInsets(handledTypes)
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             root.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
-            insets
+            WindowInsetsCompat.Builder(insets)
+                .setInsets(handledTypes, Insets.NONE)
+                .build()
         }
         store = ConnectionStore(this)
         setupPanel = findViewById(R.id.setupPanel)
