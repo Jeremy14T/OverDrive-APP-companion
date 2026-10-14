@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Android cannot express an IP-range-only cleartext exception for Tailscale.
+         Native URL policy restricts HTTP to private IPv4 + Tailscale's CGNAT range.
+         See README SECURITY NOTES for the platform-level limitation. -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors><certificates src="system" /></trust-anchors>
+    </base-config>
+</network-security-config>

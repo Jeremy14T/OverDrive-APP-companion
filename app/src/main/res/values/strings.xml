@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OverDrive Companion</string>
+    <string name="welcome">Tu vehículo, siempre a la vista.</string>
+    <string name="setup_hint">Conecta con el panel de OverDrive instalado en tu BYD. La aplicación no configura el túnel.</string>
+    <string name="address_label">Dirección de OverDrive</string>
+    <string name="url_hint">https://tu-enlace-del-vehiculo</string>
+    <string name="scan_qr">Escanear QR del automóvil</string>
+    <string name="connect">Conectar</string>
+    <string name="connection_error_title">Sin conexión al vehículo</string>
+    <string name="connection_error_text">No se pudo conectar con OverDrive. Comprueba la conexión del vehículo, el túnel y que la dirección siga vigente.</string>
+    <string name="retry">Reintentar</string>
+    <string name="change_connection">Cambiar conexión</string>
+    <string name="invalid_url">Introduce una URL HTTPS válida. Para Tailscale se admite también HTTP con una IP privada.</string>
+    <string name="qr_invalid">El QR no contiene una URL de conexión válida para el método seleccionado.</string>
+    <string name="qr_prompt">Apunta al código QR mostrado por OverDrive en el vehículo</string>
+    <string name="settings_description">Cambiar conexión</string>
+</resources>

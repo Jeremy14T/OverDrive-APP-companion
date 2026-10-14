@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+
+    <ScrollView
+        android:id="@+id/setupPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:clipToPadding="false">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="520dp"
+            android:padding="24dp"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="68dp"
+                android:layout_height="68dp"
+                android:layout_marginTop="22dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/app_icon" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="OVERDRIVE"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.09"
+                android:textColor="@color/white" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="COMPANION"
+                android:letterSpacing="0.22"
+                android:textColor="@color/accent"
+                android:textSize="12sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/welcome"
+                android:textStyle="bold"
+                android:textSize="21sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/setup_hint"
+                android:textColor="@color/muted"
+                android:textSize="14sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="TIPO DE CONEXIÓN"
+                    android:textColor="@color/muted"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.06"
+                    android:textStyle="bold" />
+                <RadioGroup
+                    android:id="@+id/providerGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp">
+                    <RadioButton
+                        android:id="@+id/cloudflareOption"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:checked="true"
+                        android:buttonTint="@color/accent"
+                        android:text="Cloudflare Tunnel"
+                        android:textColor="@color/white" />
+                    <RadioButton
+                        android:id="@+id/zrokOption"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:buttonTint="@color/accent"
+                        android:text="Zrok"
+                        android:textColor="@color/white" />
+                    <RadioButton
+                        android:id="@+id/tailscaleOption"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:buttonTint="@color/accent"
+                        android:text="Tailscale / red privada"
+                        android:textColor="@color/white" />
+                </RadioGroup>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/address_label"
+                    android:textSize="13sp"
+                    android:textColor="@color/white" />
+                <EditText
+                    android:id="@+id/urlInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/input_bg"
+                    android:hint="@string/url_hint"
+                    android:singleLine="true"
+                    android:inputType="textUri|textNoSuggestions"
+                    android:selectAllOnFocus="true"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/muted"
+                    android:textSize="14sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="9dp"
+                    android:text="Revisa la dirección antes de conectar. HTTP solo se admite con IP privada en Tailscale."
+                    android:textSize="12sp"
+                    android:textColor="@color/muted" />
+                <Button
+                    android:id="@+id/scanButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/secondary_button"
+                    android:textAllCaps="false"
+                    android:text="@string/scan_qr"
+                    android:textColor="@color/white" />
+                <Button
+                    android:id="@+id/connectButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/accent_button"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:text="@string/connect"
+                    android:textColor="@color/surface" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="Solo abre el panel original de OverDrive. Sin cuentas adicionales ni servidores propios."
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="@color/muted" />
+        </LinearLayout>
+    </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/webPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@color/surface">
+        <FrameLayout
+            android:id="@+id/webContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <Button
+            android:id="@+id/changeButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="10dp"
+            android:background="@drawable/secondary_button"
+            android:contentDescription="@string/settings_description"
+            android:text="⚙"
+            android:textAllCaps="false"
+            android:textSize="12sp"
+            android:textColor="@color/white" />
+        <ProgressBar
+            android:id="@+id/loadingProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_gravity="top"
+            android:indeterminate="true"
+            android:progressTint="@color/accent"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/errorPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="30dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+        <ImageView
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:src="@drawable/app_icon"
+            android:contentDescription="@string/app_name" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="@string/connection_error_title"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:textSize="22sp" />
+        <TextView
+            android:id="@+id/errorDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:text="@string/connection_error_text"
+            android:textColor="@color/muted"
+            android:textSize="15sp" />
+        <Button
+            android:id="@+id/retryButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/accent_button"
+            android:textAllCaps="false"
+            android:text="@string/retry"
+            android:textColor="@color/surface" />
+        <Button
+            android:id="@+id/editButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/secondary_button"
+            android:textAllCaps="false"
+            android:text="@string/change_connection"
+            android:textColor="@color/white" />
+    </LinearLayout>
+</FrameLayout>
