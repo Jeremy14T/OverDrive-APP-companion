@@ -8,4 +8,5 @@
     <color name="white">#F3F8FF</color>
     <color name="muted">#ADC2D2</color>
     <color name="danger">#FF9E96</color>
+    <color name="launcher_background">#0D1110</color>
 </resources>

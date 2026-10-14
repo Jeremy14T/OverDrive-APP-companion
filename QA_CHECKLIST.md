@@ -29,3 +29,13 @@
 | 23 | Girar el teléfono, usar teclado, cambiar a modo oscuro Android | WebView y formulario aprovechan dimensiones y zonas seguras sin perder la conexión |
 
 **Nota:** ni el estado de OverDrive en un BYD King México, ni las cámaras, transmisiones, telemetría, permisos reales, VPN, credenciales o WebSocket pueden certificarse con análisis estático. Se deben probar contra el vehículo y una URL auténtica.
+
+
+## Comprobaciones adicionales v1.3 (ícono)
+
+- [ ] El launcher muestra OD + señal con vehículo minimalista y fondo oscuro, sin un borde decorativo superpuesto.
+- [ ] El ícono se ve centrado en lanzadores redondos y cuadrados (adaptive icon, Android 8+).
+- [ ] El ícono de la pantalla de configuración y de la pantalla de error también muestra la nueva identidad.
+- [ ] Actualizar la app (misma firma) conserva URL y la sesión si no ha expirado.
+- [ ] Regresar de configuración a un WebView ya cargado no fuerza un nuevo login.
+- [ ] El acceso `⚙ Conexión` aparece solo durante la primera entrada y desaparece a los 5 segundos o al tocar la página.

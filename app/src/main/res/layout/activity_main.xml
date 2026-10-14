@@ -31,11 +31,11 @@
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
             <ImageView
-                android:layout_width="68dp"
-                android:layout_height="68dp"
-                android:layout_marginTop="22dp"
+                android:layout_width="112dp"
+                android:layout_height="76dp"
+                android:layout_marginTop="18dp"
                 android:contentDescription="@string/app_name"
-                android:src="@drawable/app_icon" />
+                android:src="@drawable/app_logo" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -216,9 +216,9 @@
         android:gravity="center"
         android:visibility="gone">
         <ImageView
-            android:layout_width="68dp"
-            android:layout_height="68dp"
-            android:src="@drawable/app_icon"
+            android:layout_width="112dp"
+            android:layout_height="76dp"
+            android:src="@drawable/app_logo"
             android:contentDescription="@string/app_name" />
         <TextView
             android:layout_width="match_parent"

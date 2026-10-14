@@ -1,4 +1,4 @@
-# OverDrive Companion — Android (v1.0.0)
+# OverDrive Companion — Android (v1.3.0)
 
 Aplicación Android independiente, en **Kotlin + WebView nativo**, para abrir la **interfaz web original** de OverDrive desde un teléfono. **No instala nada en el BYD, no modifica OverDrive, no replica sus pantallas, no genera túneles y no tiene backend propio.**
 
@@ -11,7 +11,7 @@ Referencia: [OverDrive oficial](https://github.com/yash-srivastava/Overdrive-rel
 - **Escaneo de QR real** con cámara (ZXing Android Embedded 4.3.0, orientación vertical); el usuario confirma la URL antes de conectar.
 - Dashboard remoto cargado con el WebView del teléfono; JavaScript, DOM Storage, cookies de primera parte, WebSocket a través del motor Chromium/WebView.
 - Persistencia privada de la selección y URL, arranque directo en la conexión guardada.
-- Navegación interna y Atrás; botón de configuración flotante discreto dentro de la pantalla de la web.
+- Navegación interna y Atrás; diálogo Cambiar conexión / Salir / Cancelar en la raíz de la web. Botón de conexión superior derecho únicamente durante la primera entrada, que se oculta a los 5 segundos o al tocar la web.
 - Fallos de la navegación principal: pantalla Reintentar / Cambiar conexión, con tiempo de espera inicial de 30 s. Los errores de recursos secundarios no cierran el panel.
 - Se permite al WebView solicitar permisos de cámara/micrófono de **su mismo origen**, con autorización Android. Admite selección de archivos y descarga de archivos HTTP(S) (no blobs descargables).
 
@@ -55,7 +55,7 @@ En esta entrega no se incluye un `gradlew`/wrapper JAR: GitHub Actions instala e
 2. Abre OverDrive Companion en tu teléfono.
 3. Selecciona Cloudflare, Zrok o Tailscale, y pega o escanea **el enlace real generado por OverDrive**. El botón de QR accede a la cámara bajo permiso de Android.
 4. Pulsa Conectar; aparecerá **exactamente la web servida por tu instalación de OverDrive**, incluidos sus controles y login existentes, si el túnel y el servidor están accesibles.
-5. En próximos usos se recupera esa dirección. Para editarla, toca `⚙` abajo a la derecha. Si hubo error, usa **Reintentar** o **Cambiar conexión**.
+5. En próximos usos se recupera esa dirección. Para editarla, utiliza Atrás de Android al llegar a la raíz del historial y selecciona Cambiar conexión. Durante la primera entrada también aparece temporalmente `⚙ Conexión` arriba a la derecha. Desde configuración, **Volver al panel** recupera el WebView cargado sin recargar ni perder el estado de autenticación por esa navegación. Si hubo error, usa **Reintentar** o **Cambiar conexión**.
 
 **Tailscale:** el teléfono debe estar en la misma red Tailscale que el vehículo y con la VPN activa. Una URL bien formada **no prueba** que el túnel esté operativo. Usa HTTPS cuando esté disponible. No se configuran ni autentican túneles desde Companion.
 
@@ -99,6 +99,19 @@ OverDriveCompanion/
 - `ConnectionUrlTest.kt`: pruebas JUnit ejecutadas por el workflow antes de construir el APK.
 - Sin SDK Android ni un URL real de OverDrive accesible en este entorno, **no se ha compilado un APK ni se ha hecho una prueba de dispositivo, cámara o dashboard en vivo**.
 - Antes de confiar en la aplicación para operación remota, prueba en un teléfono real: Cloudflare, Zrok, Tailscale (VPN conectada/desconectada), QR, acceso autenticado, video y WebSocket, navegación y Atrás, pantalla de error al apagar el túnel, cambio de URL, reinicio y permisos. Si una función de OverDrive falla también en Chrome para la misma URL, el problema probablemente no está en esta envoltura.
+
+
+## Ícono Android actualizado (v1.3.0)
+
+- El nuevo icono conserva el emblema OD, las ondas de conexión y una silueta minimalista de vehículo, sobre el color oscuro de la identidad original.
+- Se generaron PNG `mipmap-*` con tamaños **48, 72, 96, 144 y 192 px**, más sus variantes redondas.
+- En Android 8+ se usa un **adaptive icon** con fondo oscuro fijo y símbolo transparente en `drawable-nodpi/ic_launcher_foreground.png`; el lanzador aplica la forma.
+- `AndroidManifest.xml` ahora apunta a `@mipmap/ic_launcher` y `@mipmap/ic_launcher_round`. El icono dentro de las pantallas de configuración y error es `@drawable/app_logo`.
+- No cambia el identificador `mx.overdrive.companion`, las URL guardadas, QR, cookies ni el software del vehículo.
+
+**Importante al actualizar:** el workflow compila `app-debug.apk` con una firma de depuración que podría variar entre ejecuciones de GitHub. Si Android muestra un conflicto de firma, no desinstales sin antes considerar que al hacerlo se borrará la configuración local. Para actualizaciones continuas conviene usar una clave de firma estable.
+
+**Estado de esta versión:** recursos generados, XML y referencias verificados estáticamente; no se ha compilado ni probado este cambio de icono en un dispositivo Android desde este entorno. GitHub Actions compilará y ejecutará las pruebas al subir la versión.
 
 ## Licencia / terceros
 
