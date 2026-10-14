@@ -1,6 +1,7 @@
 package mx.overdrive.companion
 
 import android.Manifest
+import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -33,6 +34,7 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import android.view.View
+import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,6 +57,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var urlInput: EditText
     private lateinit var providerGroup: RadioGroup
     private lateinit var progress: ProgressBar
+    private lateinit var connectionHintButton: Button
+    private lateinit var returnToPanelButton: Button
     private lateinit var backHandler: OnBackPressedCallback
 
     @Volatile private var current: ConnectionStore.Saved? = null
@@ -62,6 +66,8 @@ class MainActivity : ComponentActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var navigationTimeout: Runnable? = null
     private var navigationPending = false
+    private var panelReady = false
+    private var hideHintTask: Runnable? = null
     private var fileChooser: ValueCallback<Array<Uri>>? = null
     private var pendingWebPermission: PermissionRequest? = null
 
@@ -130,16 +136,17 @@ class MainActivity : ComponentActivity() {
         urlInput = findViewById(R.id.urlInput)
         providerGroup = findViewById(R.id.providerGroup)
         progress = findViewById(R.id.loadingProgress)
+        connectionHintButton = findViewById(R.id.changeButton)
+        returnToPanelButton = findViewById(R.id.returnToPanelButton)
 
         backHandler = object : OnBackPressedCallback(false) {
             override fun handleOnBackPressed() {
-                if (webPanel.visibility == View.VISIBLE && webView?.canGoBack() == true) {
-                    webView?.goBack()
-                } else if (errorPanel.visibility == View.VISIBLE) {
-                    showSetup()
-                } else {
-                    // Exit the application at the root without overriding the system back stack.
-                    finish()
+                when {
+                    setupPanel.visibility == View.VISIBLE && canReturnToPanel() -> returnToPanel()
+                    webPanel.visibility == View.VISIBLE && webView?.canGoBack() == true -> webView?.goBack()
+                    webPanel.visibility == View.VISIBLE -> showBackMenu()
+                    errorPanel.visibility == View.VISIBLE -> showSetup()
+                    else -> finish()
                 }
             }
         }
@@ -157,7 +164,8 @@ class MainActivity : ComponentActivity() {
         findViewById<Button>(R.id.connectButton).setOnClickListener { connect() }
         findViewById<Button>(R.id.retryButton).setOnClickListener { loadPanel() }
         findViewById<Button>(R.id.editButton).setOnClickListener { showSetup() }
-        findViewById<Button>(R.id.changeButton).setOnClickListener { showSetup() }
+        connectionHintButton.setOnClickListener { showSetup() }
+        returnToPanelButton.setOnClickListener { returnToPanel() }
 
         current = store.read()
         if (current != null) loadPanel() else showSetup()
@@ -169,9 +177,21 @@ class MainActivity : ComponentActivity() {
         else -> ConnectionUrl.Provider.CLOUDFLARE
     }
 
+    private fun canReturnToPanel(): Boolean = panelReady && webView != null && current != null
+
+    private fun showBackMenu() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.back_menu_title)
+            .setMessage(R.string.back_menu_message)
+            .setPositiveButton(R.string.change_connection) { _, _ -> showSetup() }
+            .setNeutralButton(R.string.exit_app) { _, _ -> finish() }
+            .setNegativeButton(R.string.cancel_action, null)
+            .show()
+    }
+
     private fun showSetup() {
+        // Editing is not a logout: keep the loaded WebView, cookies and history untouched.
         stopTimeout()
-        webView?.stopLoading()
         current?.let { saved ->
             val radioId = when (saved.provider) {
                 ConnectionUrl.Provider.CLOUDFLARE -> R.id.cloudflareOption
@@ -181,7 +201,14 @@ class MainActivity : ComponentActivity() {
             providerGroup.check(radioId)
             urlInput.setText(saved.url)
         }
+        returnToPanelButton.visibility = if (canReturnToPanel()) View.VISIBLE else View.GONE
         showOnly(setupPanel)
+    }
+
+    private fun returnToPanel() {
+        if (!canReturnToPanel()) return
+        // Do not loadUrl(), recreate WebView or save the partially edited form.
+        showOnly(webPanel)
     }
 
     private fun connect() {
@@ -191,29 +218,78 @@ class MainActivity : ComponentActivity() {
             urlInput.error = getString(R.string.invalid_url)
             return
         }
+        val old = current
+        if (old?.provider == provider && old?.url == validated && canReturnToPanel()) {
+            // Even pressing "Conectar" with an unchanged address must preserve login/position.
+            returnToPanel()
+            return
+        }
+        if (old?.provider != provider || old?.url != validated) {
+            // An explicit change of connection begins a fresh browsing history.
+            resetWebView()
+        }
         current = ConnectionStore.Saved(provider, validated)
         store.save(current!!)
         loadPanel()
     }
 
     private fun showOnly(panel: View) {
+        hideConnectionHint()
         setupPanel.visibility = if (panel === setupPanel) View.VISIBLE else View.GONE
         webPanel.visibility = if (panel === webPanel) View.VISIBLE else View.GONE
         errorPanel.visibility = if (panel === errorPanel) View.VISIBLE else View.GONE
-        backHandler.isEnabled = panel !== setupPanel
+        backHandler.isEnabled = panel !== setupPanel || canReturnToPanel()
     }
 
     private fun loadPanel() {
         val saved = current ?: run { showSetup(); return }
+        panelReady = false
         ensureWebView()
         showOnly(webPanel)
         webView?.loadUrl(saved.url)
     }
 
     private fun showError() {
+        panelReady = false
         stopTimeout()
         webView?.stopLoading()
         showOnly(errorPanel)
+    }
+
+    private fun resetWebView() {
+        panelReady = false
+        stopTimeout()
+        pendingWebPermission?.deny()
+        pendingWebPermission = null
+        fileChooser?.onReceiveValue(null)
+        fileChooser = null
+        webView?.let { browser ->
+            browser.stopLoading()
+            webContainer.removeView(browser)
+            browser.destroy()
+        }
+        webView = null
+    }
+
+    private fun onMainPageReady(url: String) {
+        stopTimeout()
+        if (webPanel.visibility != View.VISIBLE) return
+        val saved = current ?: return
+        if (!ConnectionUrl.sameOrigin(saved.url, url)) return
+        panelReady = true
+        if (!store.hasShownConnectionHint()) {
+            // One-time, short-lived shortcut. Back at the web root works thereafter.
+            store.markConnectionHintShown()
+            connectionHintButton.visibility = View.VISIBLE
+            hideHintTask = Runnable { hideConnectionHint() }
+                .also { handler.postDelayed(it, 5_000L) }
+        }
+    }
+
+    private fun hideConnectionHint() {
+        hideHintTask?.let { handler.removeCallbacks(it) }
+        hideHintTask = null
+        if (::connectionHintButton.isInitialized) connectionHintButton.visibility = View.GONE
     }
 
     private fun startTimeout() {
@@ -239,6 +315,11 @@ class MainActivity : ComponentActivity() {
         browser.setBackgroundColor(Color.WHITE)
         browser.isVerticalScrollBarEnabled = false
         browser.isHorizontalScrollBarEnabled = false
+        // Interacting with the original dashboard (including its drawer) dismisses the hint.
+        browser.setOnTouchListener { _, event ->
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) hideConnectionHint()
+            false // Never consume touches intended for OverDrive.
+        }
         browser.settings.apply {
             javaScriptEnabled = true  // Required by OverDrive's original frontend.
             domStorageEnabled = true
@@ -293,12 +374,12 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onPageCommitVisible(view: WebView, url: String) {
-                stopTimeout() // Real main-frame content is available; no need to wait for video/WebSockets.
+                onMainPageReady(url) // No waiting for video or WebSockets.
             }
 
             override fun onPageFinished(view: WebView, url: String) {
-                // Fallback for older WebView implementations not calling onPageCommitVisible.
-                if (navigationPending && view.progress == 100) stopTimeout()
+                // Fallback if this WebView version does not report a visible commit.
+                if (navigationPending && view.progress == 100) onMainPageReady(url)
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
@@ -320,6 +401,7 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
+                panelReady = false
                 stopTimeout()
                 webContainer.removeView(view)
                 view.destroy()
@@ -429,6 +511,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        hideConnectionHint()
         stopTimeout()
         pendingWebPermission?.deny()
         pendingWebPermission = null

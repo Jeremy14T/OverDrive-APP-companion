@@ -15,4 +15,10 @@
     <string name="qr_invalid">El QR no contiene una URL de conexión válida para el método seleccionado.</string>
     <string name="qr_prompt">Apunta al código QR mostrado por OverDrive en el vehículo</string>
     <string name="settings_description">Cambiar conexión</string>
+    <string name="back_to_panel">← Volver al panel</string>
+    <string name="back_menu_title">Opciones de OverDrive</string>
+    <string name="back_menu_message">¿Qué deseas hacer?</string>
+    <string name="exit_app">Salir</string>
+    <string name="cancel_action">Cancelar</string>
+    <string name="connection_shortcut">⚙ Conexión</string>
 </resources>

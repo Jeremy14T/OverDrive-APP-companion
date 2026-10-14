@@ -16,6 +16,12 @@ internal class ConnectionStore(context: Context) {
         return Saved(provider, validated)
     }
 
+    fun hasShownConnectionHint(): Boolean = prefs.getBoolean("hint_seen_v1", false)
+
+    fun markConnectionHintShown() {
+        prefs.edit().putBoolean("hint_seen_v1", true).apply()
+    }
+
     fun save(value: Saved) {
         prefs.edit().putString("provider", value.provider.name).putString("url", value.url).apply()
     }
