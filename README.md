@@ -203,3 +203,8 @@ Este proyecto **no incluye, modifica ni redistribuye el código ni recursos de O
 - La lógica de aviso/retorno se separó en `TailscalePreflightPolicy.kt`, con pruebas JVM/JUnit. Los pasos de compilación del workflow **no fueron modificados**.
 
 **Prueba en teléfono:** primero abre el APK con Tailscale desconectado (debería aparecer el aviso antes del WebView), pulsa **Conectar de todos modos** (debería continuar y usar el error a los 10 s si no responde), y prueba **Abrir Tailscale** activándolo y volviendo a Companion. Comprueba también con Tailscale ya activo y con un perfil Zrok/Cloudflare. Las pruebas JVM por sí solas no verifican cómo informa Android sobre VPN en tu modelo de teléfono.
+
+
+### Ajuste v1.9.1: conservación de cookies
+
+Se añadió `CookieManager.flush()` en `MainActivity.onStop()` para asegurar escritura de las cookies persistentes gestionadas por el WebView al salir de la app. Esta medida no cambia la autenticación de OverDrive, no almacena el código del vehículo manualmente y no puede convertir cookies de sesión en credenciales permanentes. Ver `QA_CHECKLIST.md` para la comprobación real.

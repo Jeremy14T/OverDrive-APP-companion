@@ -128,3 +128,13 @@
 - [ ] El botón Escanear otro QR usa el mismo icono; el lector abre y devuelve la URL como antes.
 - [ ] Las funciones de Atrás, Volver al panel, inicio rápido, favoritos y WebView siguen funcionando.
 - [ ] GitHub Actions ejecuta `:app:testDebugUnitTest` y `:app:assembleDebug`, e instala el APK para validar en teléfono.
+
+
+## v1.9.1 — Persistencia de autenticación de OverDrive
+
+- Código: al salir de primer plano (`onStop`), `CookieManager.flush()` sincroniza cookies persistentes del WebView.
+- No cambia: validación de URL, túneles, favoritas, tiempo límite, modo Tailscale, credenciales, sesión del servidor ni historial dentro del panel.
+- Prueba manual imprescindible: iniciar sesión una vez en Tailscale, pasar la app a segundo plano, cerrarla desde recientes, abrirla de nuevo y confirmar que no vuelve a pedir el código. Repetir 3 veces.
+- Distinguir una cookie persistente de una cookie de sesión/`sessionStorage`: si el sitio utiliza exclusivamente credenciales temporales, `flush` por sí solo no puede extenderlas.
+- Verificar también después de 1 minuto, cambio de túnel y actualización de APK instalada **sin borrar datos**.
+- No hay prueba real contra el dispositivo en este paquete: requiere APK compilado e instalación.

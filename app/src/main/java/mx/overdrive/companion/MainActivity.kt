@@ -905,6 +905,15 @@ class MainActivity : ComponentActivity() {
         super.onPause()
     }
 
+    override fun onStop() {
+        // Persist OverDrive's regular WebView cookies when Companion leaves the foreground.
+        // Do not copy credentials/tokens, and do not alter OverDrive's authentication rules.
+        // flush() writes cookies to the WebView cookie store; it does not make
+        // session-only credentials persistent if OverDrive deliberately expires them.
+        CookieManager.getInstance().flush()
+        super.onStop()
+    }
+
     override fun onResume() {
         super.onResume()
         webView?.onResume()
