@@ -1,5 +1,27 @@
 # OverDrive Companion — Android (v1.4.0)
 
+## Actualización v1.5 — ingreso unificado y detección de túneles
+
+- **Primera configuración simplificada:** no hay un botón de «ingreso manual» que abra un segundo formulario. El formulario de conexión se muestra directamente e incluye **Escanear QR** y **pegar URL** en la misma tarjeta.
+- **Detección automática real:** al pegar una URL o leer un QR, se utiliza `ConnectionUrl.parseInput` y se identifica Cloudflare (`*.trycloudflare.com`, `*.cfargotunnel.com`), Zrok (`*.share.zrok.io`) y Tailscale (`100.64.0.0/10` y `*.ts.net`). En estos casos el proveedor se selecciona sin intervención manual y se guarda junto a la dirección tras la confirmación.
+- **Sin clasificaciones inventadas:** los dominios personalizados y direcciones privadas no reconocibles no permiten saber con certeza qué túnel se usa. Solo entonces aparece un selector Cloudflare / Zrok / Tailscale. En ese selector la etiqueta dice **Tailscale**, sin «red privada».
+- **Persistencia y navegación conservadas:** no cambia el formato de perfiles, la preferida, la última usada, la migración desde v1.3, la sesión del WebView, el lector QR ni el workflow de GitHub Actions.
+- **Sin acceso nuevo al vehículo:** la lectura QR rellena y valida un formulario; el usuario confirma «Guardar y conectar». No se configuran ni encienden túneles del automóvil.
+
+### Validación
+
+En un entorno con Kotlin/JVM instalado, los tests rápidos pueden ejecutarse desde la raíz del proyecto:
+
+```bash
+kotlinc app/src/main/java/mx/overdrive/companion/ConnectionUrl.kt verification/UrlPolicySmoke.kt -include-runtime -d /tmp/url-smoke.jar
+java -jar /tmp/url-smoke.jar
+kotlinc app/src/main/java/mx/overdrive/companion/ConnectionUrl.kt verification/ProviderDetectionSmoke.kt -include-runtime -d /tmp/provider-smoke.jar
+java -jar /tmp/provider-smoke.jar
+```
+
+Para compilar Android y ejecutar tests unitarios de Gradle, utiliza el workflow que ya contiene el proyecto. La validación de pantalla real requiere instalar y probar el APK en un teléfono.
+
+
 Aplicación Android independiente, en **Kotlin + WebView nativo**, para abrir la **interfaz web original** de OverDrive desde un teléfono. **No instala nada en el BYD, no modifica OverDrive, no replica sus pantallas, no genera túneles y no tiene backend propio.**
 
 Referencia: [OverDrive oficial](https://github.com/yash-srivastava/Overdrive-release) y [sitio oficial](https://www.overdrive.qd.je/).

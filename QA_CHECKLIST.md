@@ -1,3 +1,20 @@
+# QA v1.5 — ingreso QR/manual
+
+- [ ] Primera instalación sin perfiles: se ve un solo formulario con **Escanear QR**, URL, proveedor detectado y **Guardar y conectar**, sin botón duplicado de «Introducir manualmente».
+- [ ] Escribir `http://100.64.131.112:8080` → se muestra **Tailscale** automáticamente, sin elegir radio; guardar crea un perfil Tailscale.
+- [ ] Escanear QR con la misma URL → se muestra **Tailscale**, prellena la URL y se guarda al confirmar.
+- [ ] Pegar `https://abc.share.zrok.io` y `https://abc.trycloudflare.com` → identificar Zrok y Cloudflare respectivamente; guardar en el tipo correspondiente.
+- [ ] Pegar dominio HTTPS personalizado → el selector aparece porque el proveedor no se puede identificar con certeza; no atribuir falsamente Cloudflare.
+- [ ] Al elegir manualmente Tailscale, su etiqueta es solamente **Tailscale**.
+- [ ] Primera conexión queda como favorita inicial; última usada y favorita manual continúan funcionando.
+- [ ] Volver desde conexiones al panel cargado conserva la sesión si no se cambia de túnel.
+- [ ] Al abrir una conexión guardada distinta, se respeta la navegación y la autenticación original del servidor.
+- [ ] QR cancelado no modifica URL ni preferencias; QR inválido informa error sin guardar.
+- [ ] Después de actualizar v1.4, los perfiles guardados y su preferencia de inicio permanecen disponibles.
+- [ ] GitHub Actions: `:app:testDebugUnitTest` y `:app:assembleDebug` terminan correctamente antes de instalar el APK.
+
+---
+
 # Pruebas de aceptación — OverDrive Companion v1
 
 **Estado en esta entrega:** la verificación de formatos de archivos y política de URL puede realizarse sin Android. Todas las pruebas UI/red necesitan **APK compilado + teléfono + URL real de OverDrive**. No se marcan como realizadas por anticipado.

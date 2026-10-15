@@ -24,6 +24,19 @@ internal object ConnectionUrl {
         }
     }
 
+    /** QR and manually pasted addresses use exactly the same validation/detection path.
+     * Unknown custom HTTPS domains and non-Tailscale private IPs require explicit provider
+     * confirmation; a valid URL is not evidence of a particular tunnel.
+     */
+    data class ParsedInput(val url: String, val detectedProvider: Provider?)
+
+    fun parseInput(raw: String): ParsedInput? {
+        val detected = suggestProvider(raw)
+        val url = if (detected != null) validate(raw, detected)
+            else validate(raw, Provider.CLOUDFLARE) ?: validate(raw, Provider.TAILSCALE)
+        return url?.let { ParsedInput(it, detected) }
+    }
+
     private fun isTailscaleCgnat(host: String): Boolean {
         val p = host.split('.')
         return p.size == 4 && p.all { (it.toIntOrNull() ?: -1) in 0..255 } &&

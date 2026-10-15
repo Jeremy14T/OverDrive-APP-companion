@@ -48,48 +48,20 @@
                 android:textColor="@color/muted"
                 android:textSize="14sp" />
 
+            <!-- On first launch the single form below is already visible. No duplicate manual-entry step. -->
             <LinearLayout
                 android:id="@+id/firstRunPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:padding="20dp"
-                android:orientation="vertical"
-                android:background="@drawable/card_bg">
+                android:layout_marginTop="24dp"
+                android:orientation="vertical">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Conecta tu BYD por primera vez"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:textSize="20sp" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Abre OverDrive en tu automóvil, busca Acceso remoto y escanea el QR. Tu dirección se guardará para las próximas veces."
+                    android:text="Escanea el QR de Acceso remoto en tu vehículo o pega su dirección. El tipo de conexión se detectará automáticamente cuando sea reconocible."
                     android:lineSpacingExtra="3dp"
                     android:textColor="@color/muted"
                     android:textSize="14sp" />
-                <Button
-                    android:id="@+id/scanButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="22dp"
-                    android:background="@drawable/accent_button"
-                    android:text="Escanear QR del vehículo"
-                    android:textAllCaps="false"
-                    android:textStyle="bold"
-                    android:textColor="@color/surface" />
-                <Button
-                    android:id="@+id/manualFirstButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/secondary_button"
-                    android:text="Introducir dirección manualmente"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white" />
             </LinearLayout>
 
             <LinearLayout
@@ -150,11 +122,12 @@
                     android:textColor="@color/white" />
             </LinearLayout>
 
+            <!-- One unified entry card, auto-visible on first run, reused for add/edit. -->
             <LinearLayout
                 android:id="@+id/manualForm"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="18dp"
                 android:background="@drawable/card_bg"
                 android:orientation="vertical"
                 android:padding="18dp"
@@ -163,79 +136,35 @@
                     android:id="@+id/formTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Confirmar nueva conexión"
+                    android:text="Nueva conexión"
                     android:textStyle="bold"
                     android:textColor="@color/white"
                     android:textSize="18sp" />
+                <Button
+                    android:id="@+id/scanButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/accent_button"
+                    android:text="Escanear QR del vehículo"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:textColor="@color/surface" />
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="Nombre de esta conexión (opcional)"
-                    android:textColor="@color/white"
-                    android:textSize="13sp" />
-                <EditText
-                    android:id="@+id/connectionNameInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/input_bg"
-                    android:hint="Ej. Tailscale de mi BYD"
-                    android:inputType="textCapSentences"
-                    android:maxLength="50"
-                    android:singleLine="true"
-                    android:textColor="@color/white"
-                    android:textColorHint="@color/muted" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="Tipo de conexión"
-                    android:textColor="@color/white"
-                    android:textSize="13sp" />
-                <RadioGroup
-                    android:id="@+id/providerGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:orientation="vertical">
-                    <RadioButton
-                        android:id="@+id/cloudflareOption"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:checked="true"
-                        android:buttonTint="@color/accent"
-                        android:text="Cloudflare"
-                        android:textColor="@color/white" />
-                    <RadioButton
-                        android:id="@+id/zrokOption"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:buttonTint="@color/accent"
-                        android:text="Zrok"
-                        android:textColor="@color/white" />
-                    <RadioButton
-                        android:id="@+id/tailscaleOption"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:buttonTint="@color/accent"
-                        android:text="Tailscale / red privada"
-                        android:textColor="@color/white" />
-                </RadioGroup>
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Dirección mostrada por OverDrive"
-                    android:textColor="@color/white"
+                    android:layout_marginTop="15dp"
+                    android:gravity="center"
+                    android:text="o pega la dirección de OverDrive"
+                    android:textColor="@color/muted"
                     android:textSize="13sp" />
                 <EditText
                     android:id="@+id/urlInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="7dp"
+                    android:layout_marginTop="10dp"
                     android:background="@drawable/input_bg"
-                    android:hint="@string/url_hint"
+                    android:hint="Pega la URL mostrada por OverDrive"
                     android:inputType="textUri|textNoSuggestions"
                     android:singleLine="true"
                     android:selectAllOnFocus="true"
@@ -246,15 +175,76 @@
                     android:id="@+id/providerInfo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Comprueba la URL antes de conectar. HTTP solo con IP privada en Tailscale."
+                    android:layout_marginTop="10dp"
+                    android:text="El tipo de conexión se identificará automáticamente."
                     android:textColor="@color/muted"
                     android:textSize="12sp" />
+                <LinearLayout
+                    android:id="@+id/providerPicker"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="9dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Selecciona el proveedor de este enlace"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+                    <RadioGroup
+                        android:id="@+id/providerGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="vertical">
+                        <RadioButton
+                            android:id="@+id/cloudflareOption"
+                            android:layout_width="match_parent"
+                            android:layout_height="42dp"
+                            android:buttonTint="@color/accent"
+                            android:text="Cloudflare"
+                            android:textColor="@color/white" />
+                        <RadioButton
+                            android:id="@+id/zrokOption"
+                            android:layout_width="match_parent"
+                            android:layout_height="42dp"
+                            android:buttonTint="@color/accent"
+                            android:text="Zrok"
+                            android:textColor="@color/white" />
+                        <RadioButton
+                            android:id="@+id/tailscaleOption"
+                            android:layout_width="match_parent"
+                            android:layout_height="42dp"
+                            android:buttonTint="@color/accent"
+                            android:text="Tailscale"
+                            android:textColor="@color/white" />
+                    </RadioGroup>
+                </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="17dp"
+                    android:text="Nombre para identificarla (opcional)"
+                    android:textColor="@color/white"
+                    android:textSize="13sp" />
+                <EditText
+                    android:id="@+id/connectionNameInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:background="@drawable/input_bg"
+                    android:hint="Ej. Mi BYD"
+                    android:inputType="textCapSentences"
+                    android:maxLength="50"
+                    android:singleLine="true"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/muted" />
                 <Button
                     android:id="@+id/connectButton"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
-                    android:layout_marginTop="17dp"
+                    android:layout_marginTop="20dp"
                     android:background="@drawable/accent_button"
                     android:text="Guardar y conectar"
                     android:textAllCaps="false"

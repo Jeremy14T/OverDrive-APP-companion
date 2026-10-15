@@ -35,6 +35,8 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.view.MotionEvent
 import android.view.Gravity
@@ -61,6 +63,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var urlInput: EditText
     private lateinit var nameInput: EditText
     private lateinit var providerGroup: RadioGroup
+    private lateinit var providerPicker: View
+    private var autoDetectedProvider: ConnectionUrl.Provider? = null
     private lateinit var progress: ProgressBar
     private lateinit var connectionHintButton: Button
     private lateinit var returnToPanelButton: Button
@@ -84,21 +88,16 @@ class MainActivity : ComponentActivity() {
 
     private val qrScanner = registerForActivityResult(ScanContract()) { result ->
         val raw = result.contents?.trim() ?: return@registerForActivityResult
-        val suggested = ConnectionUrl.suggestProvider(raw)
-        val chosen = suggested ?: if (ConnectionUrl.validate(raw, ConnectionUrl.Provider.TAILSCALE) != null &&
-            raw.startsWith("http://", ignoreCase = true)) ConnectionUrl.Provider.TAILSCALE
-            else selectedProvider()
-        val valid = ConnectionUrl.validate(raw, chosen)
-        if (valid == null) {
+        val parsed = ConnectionUrl.parseInput(raw)
+        if (parsed == null) {
             toast(getString(R.string.qr_invalid))
         } else {
-            openForm(null)
-            chooseProvider(chosen)
-            urlInput.setText(valid)
-            urlInput.setSelection(valid.length)
-            findViewById<TextView>(R.id.providerInfo).text = if (suggested != null)
-                "Proveedor sugerido: ${suggested.displayName}. Confirma la dirección antes de guardarla."
-                else "No se identificó el proveedor con certeza. Selecciónalo y confirma la dirección."
+            // A scanned QR only fills the form. User confirms before saving/switching.
+            // If a saved connection is currently being edited, keep that edit context.
+            if (manualForm.visibility != View.VISIBLE) openForm(null)
+            urlInput.setText(parsed.url)
+            urlInput.setSelection(parsed.url.length)
+            // The URL watcher automatically detects the tunnel, just like manual paste.
         }
     }
 
@@ -151,6 +150,7 @@ class MainActivity : ComponentActivity() {
         urlInput = findViewById(R.id.urlInput)
         nameInput = findViewById(R.id.connectionNameInput)
         providerGroup = findViewById(R.id.providerGroup)
+        providerPicker = findViewById(R.id.providerPicker)
         progress = findViewById(R.id.loadingProgress)
         manualForm = findViewById(R.id.manualForm)
         firstRunPanel = findViewById(R.id.firstRunPanel)
@@ -163,9 +163,7 @@ class MainActivity : ComponentActivity() {
             override fun handleOnBackPressed() {
                 when {
                     setupPanel.visibility == View.VISIBLE && manualForm.visibility == View.VISIBLE -> {
-                        manualForm.visibility = View.GONE
-                        editingId = null
-                        backHandler.isEnabled = canReturnToPanel()
+                        if (store.all().isEmpty()) finish() else closeForm()
                     }
                     setupPanel.visibility == View.VISIBLE && canReturnToPanel() -> returnToPanel()
                     webPanel.visibility == View.VISIBLE && webView?.canGoBack() == true -> webView?.goBack()
@@ -179,13 +177,15 @@ class MainActivity : ComponentActivity() {
 
         findViewById<Button>(R.id.scanButton).setOnClickListener { launchQr() }
         findViewById<Button>(R.id.addQrButton).setOnClickListener { launchQr() }
-        findViewById<Button>(R.id.manualFirstButton).setOnClickListener { openForm(null) }
         findViewById<Button>(R.id.addManualButton).setOnClickListener { openForm(null) }
-        findViewById<Button>(R.id.cancelEditButton).setOnClickListener {
-            manualForm.visibility = View.GONE
-            editingId = null
-            backHandler.isEnabled = canReturnToPanel()
-        }
+        findViewById<Button>(R.id.cancelEditButton).setOnClickListener { closeForm() }
+        urlInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                refreshProviderDetection(s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
         findViewById<Button>(R.id.connectButton).setOnClickListener { saveAndConnect() }
         findViewById<Button>(R.id.useLastButton).setOnClickListener {
             store.useLastOnStartup()
@@ -201,10 +201,42 @@ class MainActivity : ComponentActivity() {
         if (current != null) loadPanel() else showSetup()
     }
 
-    private fun selectedProvider(): ConnectionUrl.Provider = when (providerGroup.checkedRadioButtonId) {
+    private fun selectedProvider(): ConnectionUrl.Provider? = when (providerGroup.checkedRadioButtonId) {
+        R.id.cloudflareOption -> ConnectionUrl.Provider.CLOUDFLARE
         R.id.zrokOption -> ConnectionUrl.Provider.ZROK
         R.id.tailscaleOption -> ConnectionUrl.Provider.TAILSCALE
-        else -> ConnectionUrl.Provider.CLOUDFLARE
+        else -> null // Do not silently label an unknown/custom URL as Cloudflare.
+    }
+
+    /** For recognized tunnel addresses the provider is chosen automatically and locked.
+     * Custom domains and ambiguous LAN IPs cannot reveal their provider; allow manual choice.
+     */
+    private fun refreshProviderDetection(raw: String) {
+        val detected = ConnectionUrl.suggestProvider(raw)
+        val previousAuto = autoDetectedProvider
+        autoDetectedProvider = detected
+        val info = findViewById<TextView>(R.id.providerInfo)
+        if (raw.isBlank()) {
+            providerPicker.visibility = View.GONE
+            providerGroup.clearCheck()
+            info.text = "El tipo de conexión se identificará automáticamente."
+            info.setTextColor(getColor(R.color.muted))
+            return
+        }
+        if (detected != null) {
+            chooseProvider(detected)
+            providerPicker.visibility = View.GONE
+            info.text = "✓ Tipo detectado automáticamente: ${detected.displayName}"
+            info.setTextColor(getColor(R.color.accent))
+            return
+        }
+        if (previousAuto != null) providerGroup.clearCheck()
+        providerPicker.visibility = View.VISIBLE
+        val valid = ConnectionUrl.parseInput(raw) != null
+        info.text = if (valid)
+            "Esta dirección no identifica un proveedor con certeza. Selecciónalo una vez para guardarla."
+            else "Introduce una dirección HTTP privada o HTTPS válida."
+        info.setTextColor(getColor(R.color.muted))
     }
 
     private fun chooseProvider(provider: ConnectionUrl.Provider) {
@@ -243,8 +275,11 @@ class MainActivity : ComponentActivity() {
         manualForm.visibility = View.GONE
         editingId = null
         renderProfiles()
+        // The first run uses one visible card: QR + URL + automatic provider detection.
+        if (store.all().isEmpty()) openForm(null)
         returnToPanelButton.visibility = if (canReturnToPanel()) View.VISIBLE else View.GONE
         showOnly(setupPanel)
+        (setupPanel as ScrollView).scrollTo(0, 0)
     }
 
     private fun renderProfiles() {
@@ -347,29 +382,59 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openForm(existing: ConnectionStore.Saved?) {
+        val firstRun = store.all().isEmpty()
         editingId = existing?.id
+        savedProfilesPanel.visibility = View.GONE
         manualForm.visibility = View.VISIBLE
         backHandler.isEnabled = true
-        findViewById<TextView>(R.id.formTitle).text = if (existing == null)
-            "Confirmar nueva conexión" else "Editar conexión guardada"
+        findViewById<TextView>(R.id.formTitle).text = when {
+            firstRun -> "Tu primera conexión"
+            existing != null -> "Editar conexión guardada"
+            else -> "Agregar conexión"
+        }
+        findViewById<Button>(R.id.cancelEditButton).visibility =
+            if (firstRun) View.GONE else View.VISIBLE
+        autoDetectedProvider = null
+        providerGroup.clearCheck()
         nameInput.setText(existing?.label ?: "")
-        urlInput.setText(existing?.url ?: "")
-        chooseProvider(existing?.provider ?: ConnectionUrl.Provider.CLOUDFLARE)
-        findViewById<TextView>(R.id.providerInfo).text =
-            "Revisa la dirección. HTTP se admite únicamente con IP privada para Tailscale."
-        (setupPanel as ScrollView).post {
-            (setupPanel as ScrollView).smoothScrollTo(0, manualForm.top)
+        urlInput.setText(existing?.url ?: "") // TextWatcher derives provider automatically.
+        if (existing != null && ConnectionUrl.suggestProvider(existing.url) == null) {
+            // Preserve the correct tunnel type for a saved custom domain.
+            chooseProvider(existing.provider)
+        }
+        if (!firstRun) {
+            (setupPanel as ScrollView).post {
+                (setupPanel as ScrollView).smoothScrollTo(0, manualForm.top)
+            }
         }
     }
 
+    private fun closeForm() {
+        manualForm.visibility = View.GONE
+        editingId = null
+        autoDetectedProvider = null
+        savedProfilesPanel.visibility = View.VISIBLE
+        backHandler.isEnabled = canReturnToPanel()
+    }
+
     private fun saveAndConnect() {
-        val provider = selectedProvider()
-        val url = ConnectionUrl.validate(urlInput.text.toString(), provider)
-        if (url == null) {
+        val parsed = ConnectionUrl.parseInput(urlInput.text.toString())
+        if (parsed == null) {
             urlInput.error = getString(R.string.invalid_url)
             return
         }
-        val saved = store.upsert(provider, url, nameInput.text.toString(), editingId)
+        val provider = parsed.detectedProvider ?: selectedProvider()
+        if (provider == null) {
+            providerPicker.visibility = View.VISIBLE
+            toast("Selecciona Cloudflare, Zrok o Tailscale para esta dirección")
+            return
+        }
+        val validUrl = ConnectionUrl.validate(parsed.url, provider)
+        if (validUrl == null) {
+            urlInput.error = getString(R.string.invalid_url)
+            return
+        }
+        val saved = store.upsert(provider, validUrl, nameInput.text.toString(), editingId)
         editingId = null
         manualForm.visibility = View.GONE
         useProfile(saved)

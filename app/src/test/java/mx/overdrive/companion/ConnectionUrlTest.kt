@@ -50,4 +50,27 @@ class ConnectionUrlTest {
         assertNull(ConnectionUrl.suggestProvider("http://192.168.1.50:8080"))
         assertNull(ConnectionUrl.suggestProvider("javascript:alert(1)"))
     }
+    @Test fun qrAndManualInputShareAutomaticProviderDetection() {
+        for ((input, expected) in listOf(
+            "http://100.64.131.112:8080" to ts,
+            "https://car.tailnet.ts.net" to ts,
+            "https://abc.share.zrok.io" to z,
+            "https://abc.trycloudflare.com" to cf
+        )) {
+            val qr = ConnectionUrl.parseInput(input)
+            val manuallyPasted = ConnectionUrl.parseInput("  $input  ")
+            assertEquals(expected, qr?.detectedProvider)
+            assertEquals(qr, manuallyPasted)
+        }
+    }
+    @Test fun unknownCustomDomainsNeedUserProviderChoice() {
+        val custom = ConnectionUrl.parseInput("https://auto.example.org")
+        assertNotNull(custom)
+        assertNull(custom!!.detectedProvider)
+        val privateLan = ConnectionUrl.parseInput("http://192.168.1.20:8080")
+        assertNotNull(privateLan)
+        assertNull(privateLan!!.detectedProvider)
+        assertNull(ConnectionUrl.parseInput("http://evil.example.org"))
+        assertNull(ConnectionUrl.parseInput("javascript:alert(1)"))
+    }
 }
