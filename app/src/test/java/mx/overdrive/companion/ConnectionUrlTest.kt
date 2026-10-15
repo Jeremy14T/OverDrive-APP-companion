@@ -41,4 +41,13 @@ class ConnectionUrlTest {
         assertFalse(ConnectionUrl.allowedResource(main, "http://example.com/file.js"))
         assertTrue(ConnectionUrl.allowedResource(main, "https://fonts.gstatic.com/file.woff2"))
     }
+    @Test fun identifiesRecognizableQrTunnelTypes() {
+        assertEquals(cf, ConnectionUrl.suggestProvider("https://demo.trycloudflare.com"))
+        assertEquals(z, ConnectionUrl.suggestProvider("https://demo.share.zrok.io"))
+        assertEquals(ts, ConnectionUrl.suggestProvider("http://100.64.131.112:8080"))
+        assertEquals(ts, ConnectionUrl.suggestProvider("https://vehicle.tailnet.ts.net"))
+        assertNull(ConnectionUrl.suggestProvider("https://my-custom-domain.com"))
+        assertNull(ConnectionUrl.suggestProvider("http://192.168.1.50:8080"))
+        assertNull(ConnectionUrl.suggestProvider("javascript:alert(1)"))
+    }
 }

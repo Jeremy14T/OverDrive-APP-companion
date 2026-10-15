@@ -7,7 +7,29 @@ import java.util.Locale
  * No parsing via WebView / android.net.Uri, so this can also be unit tested on the JVM.
  */
 internal object ConnectionUrl {
-    enum class Provider { CLOUDFLARE, ZROK, TAILSCALE }
+    enum class Provider(val displayName: String) {
+        CLOUDFLARE("Cloudflare"), ZROK("Zrok"), TAILSCALE("Tailscale")
+    }
+
+    /** Only suggest on recognizable hostnames/ranges. Custom domains require user confirmation. */
+    fun suggestProvider(raw: String): Provider? {
+        val uri = try { URI(raw.trim()) } catch (_: Exception) { return null }
+        val host = uri.host?.lowercase(Locale.ROOT) ?: return null
+        return when {
+            host == "trycloudflare.com" || host.endsWith(".trycloudflare.com") ||
+                host.endsWith(".cfargotunnel.com") -> Provider.CLOUDFLARE
+            host == "share.zrok.io" || host.endsWith(".share.zrok.io") -> Provider.ZROK
+            host.endsWith(".ts.net") || isTailscaleCgnat(host) -> Provider.TAILSCALE
+            else -> null
+        }
+    }
+
+    private fun isTailscaleCgnat(host: String): Boolean {
+        val p = host.split('.')
+        return p.size == 4 && p.all { (it.toIntOrNull() ?: -1) in 0..255 } &&
+            p[0] == "100" && p[1].toInt() in 64..127
+    }
+
 
     fun validate(raw: String, provider: Provider): String? {
         val value = raw.trim()

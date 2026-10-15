@@ -1,4 +1,4 @@
-# OverDrive Companion — Android (v1.3.0)
+# OverDrive Companion — Android (v1.4.0)
 
 Aplicación Android independiente, en **Kotlin + WebView nativo**, para abrir la **interfaz web original** de OverDrive desde un teléfono. **No instala nada en el BYD, no modifica OverDrive, no replica sus pantallas, no genera túneles y no tiene backend propio.**
 
@@ -6,11 +6,15 @@ Referencia: [OverDrive oficial](https://github.com/yash-srivastava/Overdrive-rel
 
 ## Funciones incluidas
 
-- Pantalla de configuración con **Cloudflare**, **Zrok** o **Tailscale**.
+- **Nuevo ingreso**: la primera vez se ofrece escanear el QR de OverDrive en el vehículo; introducir una URL es la alternativa.
+- **Administrador de múltiples túneles**: perfiles independientes Cloudflare, Zrok y Tailscale con nombre y URL, almacenados localmente.
+- **Elección de preferencia de inicio**: la primera conexión guardada se etiqueta favorita, pero la apertura automática usa la última seleccionada salvo que marques explícitamente una favorita (★); también puedes volver al modo “última usada”.
+- **Prueba de accesibilidad** desde cada perfil, con una solicitud `HEAD` y tiempo de espera de 6.5 s. Indica si el servidor HTTP respondió; **NO** acredita que sea OverDrive ni que el túnel esté activo internamente o que la sesión esté autenticada.
+- Detección **sugerida** de túneles a partir de URL/QR reconocibles: `*.trycloudflare.com`, `*.share.zrok.io`, `*.ts.net` y Tailscale `100.64.0.0/10`. Para dominios personalizados se pide confirmación del proveedor.
 - Validación estricta de URL: HTTPS para todos los métodos; HTTP únicamente en Tailscale/red privada hacia una dirección IPv4 privada literal o 100.64.0.0/10.
 - **Escaneo de QR real** con cámara (ZXing Android Embedded 4.3.0, orientación vertical); el usuario confirma la URL antes de conectar.
 - Dashboard remoto cargado con el WebView del teléfono; JavaScript, DOM Storage, cookies de primera parte, WebSocket a través del motor Chromium/WebView.
-- Persistencia privada de la selección y URL, arranque directo en la conexión guardada.
+- Persistencia privada de todas las conexiones, favorita, última usada y preferencia de inicio. **Migración automática** de la URL única guardada en v1.3, sin borrar preferencias ni cookies. Arranque directo en el túnel seleccionado de acuerdo a la preferencia.
 - Navegación interna y Atrás; diálogo Cambiar conexión / Salir / Cancelar en la raíz de la web. Botón de conexión superior derecho únicamente durante la primera entrada, que se oculta a los 5 segundos o al tocar la web.
 - Fallos de la navegación principal: pantalla Reintentar / Cambiar conexión, con tiempo de espera inicial de 30 s. Los errores de recursos secundarios no cierran el panel.
 - Se permite al WebView solicitar permisos de cámara/micrófono de **su mismo origen**, con autorización Android. Admite selección de archivos y descarga de archivos HTTP(S) (no blobs descargables).
@@ -53,9 +57,11 @@ En esta entrega no se incluye un `gradlew`/wrapper JAR: GitHub Actions instala e
 
 1. Configura en OverDrive (instalado en el vehículo) el túnel remoto que prefieras.
 2. Abre OverDrive Companion en tu teléfono.
-3. Selecciona Cloudflare, Zrok o Tailscale, y pega o escanea **el enlace real generado por OverDrive**. El botón de QR accede a la cámara bajo permiso de Android.
-4. Pulsa Conectar; aparecerá **exactamente la web servida por tu instalación de OverDrive**, incluidos sus controles y login existentes, si el túnel y el servidor están accesibles.
-5. En próximos usos se recupera esa dirección. Para editarla, utiliza Atrás de Android al llegar a la raíz del historial y selecciona Cambiar conexión. Durante la primera entrada también aparece temporalmente `⚙ Conexión` arriba a la derecha. Desde configuración, **Volver al panel** recupera el WebView cargado sin recargar ni perder el estado de autenticación por esa navegación. Si hubo error, usa **Reintentar** o **Cambiar conexión**.
+3. En la **primera ejecución**, pulsa **Escanear QR del vehículo** y apunta a Acceso remoto de OverDrive; también puedes **Introducir dirección manualmente**. El escáner no entra automáticamente: siempre confirmas proveedor y URL antes de guardar.
+4. Al confirmar **Guardar y conectar**, aparece el dashboard original de OverDrive con su autenticación habitual. La primera URL queda **favorita inicial**.
+5. Para añadir otra: dentro del panel, usa Atrás de Android hasta la raíz → **Mis conexiones**, o el acceso de una sola vez de arriba a la derecha. Pulsa **Escanear otro QR** o **Agregar URL manualmente**. Cada túnel se guarda por separado.
+6. En Mis conexiones, pulsa **Abrir** para cambiar sin volver a escribir la dirección; **Probar** comprueba si responde un servidor HTTP en esa URL; **Editar dirección** modifica una URL guardada. La estrella ★ **fija la favorita para siguientes arranques**, independientemente de la última utilizada; **Abrir la última usada al iniciar** devuelve el comportamiento de ingreso rápido por la última conexión seleccionada.
+7. **Volver al panel** conserva el WebView cargado sin iniciar otra navegación. Abrir una URL/proveedor distinto sí inicia una navegación nueva y podría necesitar autenticación del servidor. Si un túnel falla, usa **Reintentar** o **Cambiar conexión**.
 
 **Tailscale:** el teléfono debe estar en la misma red Tailscale que el vehículo y con la VPN activa. Una URL bien formada **no prueba** que el túnel esté operativo. Usa HTTPS cuando esté disponible. No se configuran ni autentican túneles desde Companion.
 
@@ -88,7 +94,8 @@ OverDriveCompanion/
 - Los enlaces externos por HTTPS iniciados por el usuario se abren en el navegador; los enlaces internos del **mismo origen** permanecen en WebView. Las redirecciones a proveedores SSO externos y las ventanas emergentes pueden requerir una adaptación futura de seguridad, según la configuración real del servidor.
 - Por defecto no se habilitan cookies de terceros. Si la autenticación del túnel las requiere, esa integración debe evaluarse por separado; no se ignora la autenticación existente.
 - Las preferencias se guardan **solo en almacenamiento privado de la app** (`SharedPreferences`, `allowBackup=false`); no se transmiten a infraestructura de Companion. La propia conexión al servidor/túnel y la web pueden, naturalmente, intercambiar datos conforme a OverDrive.
-- Se guardará la URL completa proporcionada por el usuario, incluidos parámetros si los tiene. **No pegues contraseñas o tokens en la URL** salvo que el propio servicio lo exija; los parámetros de enlace también podrían ser credenciales.
+- Se guardarán las URLs completas proporcionadas por el usuario, incluidos parámetros si los tienen. La prueba de conexión usa `HEAD` a una URL que hayas guardado de forma explícita; no envía cookies ni sigue redirecciones. Es una prueba de conectividad a ese servidor, **no** de identidad de OverDrive ni salud de los demonios de túnel.
+- El estado “Última usada” significa **última seleccionada**. Si una conexión falló, también puede seguir siendo la última seleccionada. Selecciona manualmente la favorita para tener un arranque estable. **No pegues contraseñas o tokens en la URL** salvo que el propio servicio lo exija; los parámetros de enlace también podrían ser credenciales.
 - **Limitación de HTTP privado en Android:** Network Security Config no permite definir una excepción HTTP por rango IPv4/Tailscale. Para admitir HTTP privado, la configuración de transporte del proceso permite cleartext, **pero la política de navegación/carga de recursos en Companion rechaza HTTP público y solo permite subrecursos HTTP del origen privado configurado**. Esto **no es un firewall de red ni intercepta necesariamente todos los WebSockets/las peticiones originadas por JavaScript**. Por ello, para un entorno de máxima seguridad conviene quitar el soporte HTTP y usar exclusivamente HTTPS mediante un túnel fiable. HTTP no cifra la comunicación entre el móvil y el destino aunque Tailscale pueda cifrar su túnel.
 - WebView no puede garantizar compatibilidad al 100% con el comportamiento de Chrome para todas las variantes del dashboard. La reproducción de video, cámaras, funciones que pidan contextos seguros, nuevas ventanas, SSO, `blob:`-downloads y ciertos permisos pueden tener limitaciones dependientes de Android System WebView y de la versión del servidor.
 - `RECORD_AUDIO` se solicita solo si la página, desde el origen configurado, solicita el micrófono; `CAMERA` se solicita al escanear un QR o si la web legítima pide usarla. Los controles del vehículo siguen estando dentro de **OverDrive**, no de Companion.
@@ -116,3 +123,13 @@ OverDriveCompanion/
 ## Licencia / terceros
 
 Este proyecto **no incluye, modifica ni redistribuye el código ni recursos de OverDrive**; la web la sirve tu propio vehículo. No es una aplicación oficial del proyecto OverDrive. ZXing Android Embedded es una biblioteca de terceros bajo Apache 2.0. Todos los accesos al vehículo están sujetos a la seguridad y responsabilidad de la instalación original.
+
+
+## Registro de cambios v1.4.0
+
+- Rediseño de primera configuración con QR prioritario.
+- Perfiles múltiples: se migra la conexión única anterior desde `companion_connection` a JSON local en la misma preferencia.
+- Primer perfil favorito inicial; por defecto se reabre la **última conexión elegida**. Marcar ★ habilita favorita fija; botón «Abrir la última usada al iniciar» revierte a último uso.
+- Prueba `HEAD` con timeout y sin cookies, UI no bloqueante. Una respuesta HTTP no acredita autenticación ni disponibilidad interna del túnel.
+- Mantiene el WebView, la corrección de insets, su navegación, el botón temporal superior derecho, los recursos del ícono v1.3 y el workflow de GitHub Actions.
+- **Validación realizada aquí**: XML/referencias de recursos revisados y lógica `ConnectionUrl`, detección QR, `ProfileChoice` y `ConnectionProbe` compiladas con Kotlin/JVM; **compilación APK y pruebas en Android pendientes** hasta ejecutar GitHub Actions y probar el vehículo real.

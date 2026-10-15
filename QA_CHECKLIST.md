@@ -39,3 +39,20 @@
 - [ ] Actualizar la app (misma firma) conserva URL y la sesión si no ha expirado.
 - [ ] Regresar de configuración a un WebView ya cargado no fuerza un nuevo login.
 - [ ] El acceso `⚙ Conexión` aparece solo durante la primera entrada y desaparece a los 5 segundos o al tocar la página.
+
+
+## Pruebas de regresión v1.4.0 (pendientes en teléfono físico)
+
+1. **Actualización con datos previos**: instalar sobre v1.3 con firma compatible. Debe importar automáticamente la URL única, abrir el mismo túnel y conservar la sesión/cookies existentes; si la firma cambia, **NO** desinstalar sin considerar pérdida de datos.
+2. **Primera ejecución sin conexión**: mostrar Escanear QR como botón principal; URL manual accesible y el botón de volver al panel oculto.
+3. **QR de Tailscale**: `http://100.64.131.112:8080` debe sugerir Tailscale, llenar el formulario, y esperar confirmación (no conectar inmediatamente).
+4. **QR desconocido**: no debe inventar proveedor; solicitar confirmación. URL inválida se rechaza, y no se guarda.
+5. **Primer perfil**: debe quedar marcado como favorito inicial y como último utilizado, y abrir directamente al reiniciar la app.
+6. **Dos/tres perfiles**: guardar Tailscale y un enlace HTTPS de Zrok/Cloudflare; volver a Mis conexiones y ver ambos, sin sobrescribir ninguno.
+7. **Última utilizada**: sin favorito fijado manualmente, abrir otro perfil y reiniciar; se abrirá el último seleccionado.
+8. **Favorita fija**: marcar ★ en otra conexión y reiniciar; abrirá esa favorita, aunque haya seleccionado otro túnel después. El botón «Abrir la última usada al iniciar» restaura la prioridad del último seleccionado.
+9. **Prueba de conexión**: con servidor accesible, mostrar respuesta HTTP, **sin** afirmar que está autenticado. Con Tailscale desactivado, debe informar error/timeout sin congelar la interfaz ni borrar los perfiles.
+10. **Regreso sin recarga**: desde el dashboard autenticado, usar Atrás → Mis conexiones → Volver al panel. Debe conservar el WebView/cookies y posición sin solicitar de nuevo el código por ese retorno.
+11. **Cambio de origen**: al pasar de Tailscale a Zrok puede pedirse nueva autenticación original. No borrar cookies ni alterar OverDrive en el vehículo.
+12. **QR/cámara, video/audio, teclado/insets, páginas internas y menú lateral**: repetir las pruebas v1.3.
+13. **Compilación real**: verificar GitHub Actions `:app:testDebugUnitTest` y `:app:assembleDebug`, luego instalar y probar en teléfono.
