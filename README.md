@@ -1,4 +1,15 @@
-# OverDrive Companion — Android (v1.4.0)
+# OverDrive Companion — Android (v1.6.0)
+
+## Actualización v1.6 — inicio visual y recuperación de Tailscale
+
+- **Ingreso más claro:** encabezado compacto, breve tarjeta de bienvenida, escaneo QR como acción destacada, separador visual y pegado de URL en el mismo formulario. Los perfiles previamente guardados permanecen como estaban.
+- **Consejo contextual:** al identificar una URL Tailscale por escritura, pegado o QR, o al elegir ese proveedor para una URL ambigua, se indica que Tailscale debe estar instalado y conectado **en este teléfono** a la red del vehículo. Aparece Abrir Tailscale o Instalar Tailscale, según esté instalada la aplicación oficial `com.tailscale.ipn`.
+- **Sin pantalla blanca permanente:** mientras inicia la navegación principal aparece una pantalla oscura con indicador de carga. Un tiempo máximo de **10 segundos contados desde `loadUrl`** muestra la pantalla de error si no se confirma que se ha mostrado una página. Los fallos de navegación principal también producen error; los de recursos secundarios no cierran el panel.
+- **Errores contextualizados:** Tailscale muestra recomendaciones para comprobar la app en el teléfono, el túnel en el coche y la dirección. Cloudflare y Zrok mantienen el mensaje genérico. **No se afirma ni se puede comprobar desde Companion que Tailscale está realmente apagado; el mensaje es una guía de comprobaciones.**
+- **Reintentos limpios:** después de un error se recrea únicamente el WebView para evitar eventos tardíos de cargas fallidas, sin borrar cookies, historial de perfiles, favorita ni última conexión. Al volver desde configuración a un panel que ya funciona, sigue reutilizándose el mismo WebView sin recarga.
+- **Sin permisos de VPN ni acceso nuevo a OverDrive:** el botón Tailscale abre la aplicación o su ficha oficial; no enciende una VPN sin consentimiento y no obtiene el código de acceso del vehículo.
+
+**Validación de esta entrega:** pruebas Kotlin/JVM de políticas URL, detección y clasificación de errores ejecutadas localmente; XML/recursos revisados de forma estática. **La compilación Android y pruebas reales con Tailscale apagado o encendido quedan pendientes en GitHub Actions y un teléfono.**
 
 ## Actualización v1.5 — ingreso unificado y detección de túneles
 
@@ -79,7 +90,7 @@ En esta entrega no se incluye un `gradlew`/wrapper JAR: GitHub Actions instala e
 
 1. Configura en OverDrive (instalado en el vehículo) el túnel remoto que prefieras.
 2. Abre OverDrive Companion en tu teléfono.
-3. En la **primera ejecución**, pulsa **Escanear QR del vehículo** y apunta a Acceso remoto de OverDrive; también puedes **Introducir dirección manualmente**. El escáner no entra automáticamente: siempre confirmas proveedor y URL antes de guardar.
+3. En la **primera ejecución**, pulsa **Escanear QR del vehículo** o pega la URL directamente en la misma tarjeta. El escáner no entra automáticamente: siempre confirmas la URL antes de guardar. Si detecta Tailscale, verás el consejo para tenerlo instalado y conectado en este teléfono.
 4. Al confirmar **Guardar y conectar**, aparece el dashboard original de OverDrive con su autenticación habitual. La primera URL queda **favorita inicial**.
 5. Para añadir otra: dentro del panel, usa Atrás de Android hasta la raíz → **Mis conexiones**, o el acceso de una sola vez de arriba a la derecha. Pulsa **Escanear otro QR** o **Agregar URL manualmente**. Cada túnel se guarda por separado.
 6. En Mis conexiones, pulsa **Abrir** para cambiar sin volver a escribir la dirección; **Probar** comprueba si responde un servidor HTTP en esa URL; **Editar dirección** modifica una URL guardada. La estrella ★ **fija la favorita para siguientes arranques**, independientemente de la última utilizada; **Abrir la última usada al iniciar** devuelve el comportamiento de ingreso rápido por la última conexión seleccionada.
@@ -99,6 +110,7 @@ OverDriveCompanion/
 │       │   ├── AndroidManifest.xml
 │       │   ├── java/mx/overdrive/companion/
 │       │   │   ├── MainActivity.kt             # UI / WebView / QR / errores
+│       │   │   ├── ConnectionFailurePolicy.kt # Plazo y tipo de error
 │       │   │   ├── PortraitQrCaptureActivity.kt
 │       │   │   ├── ConnectionStore.kt         # SharedPreferences privadas
 │       │   │   └── ConnectionUrl.kt           # Validación de URL/origen
@@ -120,6 +132,8 @@ OverDriveCompanion/
 - El estado “Última usada” significa **última seleccionada**. Si una conexión falló, también puede seguir siendo la última seleccionada. Selecciona manualmente la favorita para tener un arranque estable. **No pegues contraseñas o tokens en la URL** salvo que el propio servicio lo exija; los parámetros de enlace también podrían ser credenciales.
 - **Limitación de HTTP privado en Android:** Network Security Config no permite definir una excepción HTTP por rango IPv4/Tailscale. Para admitir HTTP privado, la configuración de transporte del proceso permite cleartext, **pero la política de navegación/carga de recursos en Companion rechaza HTTP público y solo permite subrecursos HTTP del origen privado configurado**. Esto **no es un firewall de red ni intercepta necesariamente todos los WebSockets/las peticiones originadas por JavaScript**. Por ello, para un entorno de máxima seguridad conviene quitar el soporte HTTP y usar exclusivamente HTTPS mediante un túnel fiable. HTTP no cifra la comunicación entre el móvil y el destino aunque Tailscale pueda cifrar su túnel.
 - WebView no puede garantizar compatibilidad al 100% con el comportamiento de Chrome para todas las variantes del dashboard. La reproducción de video, cámaras, funciones que pidan contextos seguros, nuevas ventanas, SSO, `blob:`-downloads y ciertos permisos pueden tener limitaciones dependientes de Android System WebView y de la versión del servidor.
+- El botón **Abrir Tailscale** usa visibilidad de paquete limitada a `com.tailscale.ipn` y, si no está instalado, ofrece Google Play. **No comprueba el estado interno de Tailscale ni certifica que la VPN esté activa**.
+- El watchdog de 10 s mide la carga principal desde la solicitud y puede agotar el plazo en redes lentas aunque el túnel esté encendido. El error sugiere comprobaciones, no una causa definitiva. No se aplica a las peticiones secundarias una vez mostrado el panel.
 - `RECORD_AUDIO` se solicita solo si la página, desde el origen configurado, solicita el micrófono; `CAMERA` se solicita al escanear un QR o si la web legítima pide usarla. Los controles del vehículo siguen estando dentro de **OverDrive**, no de Companion.
 
 ## Pruebas y estado

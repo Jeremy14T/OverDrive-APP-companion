@@ -21,4 +21,9 @@
     <string name="exit_app">Salir</string>
     <string name="cancel_action">Cancelar</string>
     <string name="connection_shortcut">⚙ Conexión</string>
+    <string name="tailscale_error_title">No se pudo abrir OverDrive por Tailscale</string>
+    <string name="tailscale_error_text">Comprueba que Tailscale esté instalado y conectado en este teléfono, que la conexión Tailscale esté disponible en el vehículo y que la dirección siga siendo válida. No podemos determinar cuál de estas causas provocó el error.</string>
+    <string name="open_tailscale">Abrir Tailscale</string>
+    <string name="install_tailscale">Instalar Tailscale</string>
+    <string name="tailscale_open_failed">No fue posible abrir Tailscale ni su página de instalación.</string>
 </resources>

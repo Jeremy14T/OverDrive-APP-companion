@@ -1,4 +1,22 @@
-# QA v1.5 — ingreso QR/manual
+# QA v1.6 — UI de ingreso, ayuda de Tailscale y error en 10 segundos
+
+## Nuevas verificaciones de v1.6 (pendientes en Android real)
+
+- [ ] Primera instalación: tarjeta de bienvenida corta, botón QR visible, entrada URL debajo y botón Guardar y conectar; sin dos formularios ni espacios enormes.
+- [ ] Pegar `http://100.64.131.112:8080`: aparece Tailscale detectado y tarjeta informativa indicando **instalar y conectar Tailscale en ESTE teléfono**.
+- [ ] Escanear ese mismo QR: la tarjeta informativa aparece automáticamente, sin elegir manualmente el proveedor.
+- [ ] Pegar una URL Zrok o Cloudflare: tarjeta Tailscale **no** se muestra.
+- [ ] URL personalizada: seleccionar manualmente Tailscale muestra el consejo; cambiar a Zrok lo oculta.
+- [ ] Si Tailscale está instalado: botón Abrir Tailscale abre su aplicación. Si no: botón Instalar Tailscale abre Google Play.
+- [ ] Con Tailscale apagado: intento de conexión muestra estado de carga oscuro y **antes de superar aproximadamente 10 s** muestra error especial con tres alternativas (abrir/instalar Tailscale, reintentar y cambiar conexión). Verifica que no se afirme una causa definitiva.
+- [ ] Con Tailscale activo y OverDrive accesible: el WebView muestra el panel original, sin cerrar por errores de recursos secundarios o transmisiones.
+- [ ] Con Zrok/Cloudflare inaccesibles: error genérico (no Tailscale), límite de carga de 10 s y botones Reintentar/Cambiar conexión.
+- [ ] Reintentar después de timeout: segunda carga funciona si reactivas Tailscale; no se pierden URLs ni sesión/cookies voluntariamente.
+- [ ] Configuración → Volver al panel cuando ya estaba cargado: sin navegación ni autenticación forzada.
+- [ ] Se conservan favorita, última utilizada, pantalla de acceso QR, ícono y corrección de espacio superior.
+- [ ] GitHub Actions debe pasar `:app:testDebugUnitTest` y `:app:assembleDebug`; después probar sobre Android. Las pruebas JVM y revisión XML no sustituyen la prueba real.
+
+---
 
 - [ ] Primera instalación sin perfiles: se ve un solo formulario con **Escanear QR**, URL, proveedor detectado y **Guardar y conectar**, sin botón duplicado de «Introducir manualmente».
 - [ ] Escribir `http://100.64.131.112:8080` → se muestra **Tailscale** automáticamente, sin elegir radio; guardar crea un perfil Tailscale.

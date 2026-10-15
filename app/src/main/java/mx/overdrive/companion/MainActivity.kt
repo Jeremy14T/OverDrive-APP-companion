@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -55,6 +54,10 @@ import java.util.concurrent.Executors
 
 /** Companion manages saved entry points; all car features and authentication remain in OverDrive. */
 class MainActivity : ComponentActivity() {
+    companion object {
+        private const val TAILSCALE_PACKAGE = "com.tailscale.ipn"
+    }
+
     private lateinit var store: ConnectionStore
     private lateinit var setupPanel: View
     private lateinit var webPanel: View
@@ -68,6 +71,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var progress: ProgressBar
     private lateinit var connectionHintButton: Button
     private lateinit var returnToPanelButton: Button
+    private lateinit var tailscaleAdvice: View
+    private lateinit var tailscaleHelpButton: Button
+    private lateinit var errorTitle: TextView
+    private lateinit var errorDescription: TextView
+    private lateinit var openTailscaleButton: Button
+    private lateinit var loadingState: View
     private lateinit var backHandler: OnBackPressedCallback
     private lateinit var manualForm: View
     private lateinit var firstRunPanel: View
@@ -81,6 +90,8 @@ class MainActivity : ComponentActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var navigationTimeout: Runnable? = null
     private var navigationPending = false
+    private var mainFrameFailed = false
+    private var navigationFailed = false
     private var panelReady = false
     private var hideHintTask: Runnable? = null
     private var fileChooser: ValueCallback<Array<Uri>>? = null
@@ -158,6 +169,17 @@ class MainActivity : ComponentActivity() {
         profileList = findViewById(R.id.profileList)
         connectionHintButton = findViewById(R.id.changeButton)
         returnToPanelButton = findViewById(R.id.returnToPanelButton)
+        tailscaleAdvice = findViewById(R.id.tailscaleAdvice)
+        tailscaleHelpButton = findViewById(R.id.tailscaleHelpButton)
+        errorTitle = findViewById(R.id.errorTitle)
+        errorDescription = findViewById(R.id.errorDescription)
+        openTailscaleButton = findViewById(R.id.openTailscaleButton)
+        loadingState = findViewById(R.id.loadingState)
+        tailscaleHelpButton.setOnClickListener { openTailscale() }
+        openTailscaleButton.setOnClickListener { openTailscale() }
+        providerGroup.setOnCheckedChangeListener { _, _ ->
+            refreshTailscaleAdvice()
+        }
 
         backHandler = object : OnBackPressedCallback(false) {
             override fun handleOnBackPressed() {
@@ -221,6 +243,8 @@ class MainActivity : ComponentActivity() {
             providerGroup.clearCheck()
             info.text = "El tipo de conexión se identificará automáticamente."
             info.setTextColor(getColor(R.color.muted))
+            info.visibility = View.GONE
+            refreshTailscaleAdvice()
             return
         }
         if (detected != null) {
@@ -228,6 +252,8 @@ class MainActivity : ComponentActivity() {
             providerPicker.visibility = View.GONE
             info.text = "✓ Tipo detectado automáticamente: ${detected.displayName}"
             info.setTextColor(getColor(R.color.accent))
+            info.visibility = View.VISIBLE
+            refreshTailscaleAdvice()
             return
         }
         if (previousAuto != null) providerGroup.clearCheck()
@@ -237,6 +263,39 @@ class MainActivity : ComponentActivity() {
             "Esta dirección no identifica un proveedor con certeza. Selecciónalo una vez para guardarla."
             else "Introduce una dirección HTTP privada o HTTPS válida."
         info.setTextColor(getColor(R.color.muted))
+        info.visibility = View.VISIBLE
+        refreshTailscaleAdvice()
+    }
+
+    private fun refreshTailscaleAdvice() {
+        if (!::tailscaleAdvice.isInitialized) return
+        val isTailscale = autoDetectedProvider == ConnectionUrl.Provider.TAILSCALE ||
+            (autoDetectedProvider == null && selectedProvider() == ConnectionUrl.Provider.TAILSCALE)
+        tailscaleAdvice.visibility = if (isTailscale) View.VISIBLE else View.GONE
+        if (isTailscale) updateTailscaleActionText(tailscaleHelpButton)
+    }
+
+    private fun updateTailscaleActionText(button: Button) {
+        button.setText(if (tailscaleLaunchIntent() != null)
+            R.string.open_tailscale else R.string.install_tailscale)
+    }
+
+    private fun tailscaleLaunchIntent(): Intent? =
+        packageManager.getLaunchIntentForPackage(TAILSCALE_PACKAGE)
+
+    private fun openTailscale() {
+        val intent = tailscaleLaunchIntent() ?: Intent(Intent.ACTION_VIEW,
+            Uri.parse("market://details?id=$TAILSCALE_PACKAGE"))
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=$TAILSCALE_PACKAGE")))
+            } catch (_: Exception) {
+                toast(getString(R.string.tailscale_open_failed))
+            }
+        }
     }
 
     private fun chooseProvider(provider: ConnectionUrl.Provider) {
@@ -402,6 +461,7 @@ class MainActivity : ComponentActivity() {
             // Preserve the correct tunnel type for a saved custom domain.
             chooseProvider(existing.provider)
         }
+        refreshTailscaleAdvice()
         if (!firstRun) {
             (setupPanel as ScrollView).post {
                 (setupPanel as ScrollView).smoothScrollTo(0, manualForm.top)
@@ -471,16 +531,32 @@ class MainActivity : ComponentActivity() {
 
     private fun loadPanel() {
         val saved = current ?: run { showSetup(); return }
+        // A timed-out/failed WebView can send late callbacks. Recreate only on retry;
+        // CookieManager and saved profiles remain untouched.
+        if (errorPanel.visibility == View.VISIBLE) resetWebView()
         panelReady = false
+        stopTimeout()
+        mainFrameFailed = false
+        navigationFailed = false
         ensureWebView()
         showOnly(webPanel)
+        // Start the deadline BEFORE loadUrl: WebView may never call onPageStarted on bad networks.
+        startTimeout()
         webView?.loadUrl(saved.url)
     }
 
     private fun showError() {
+        if (errorPanel.visibility == View.VISIBLE) return
+        navigationFailed = true
+        mainFrameFailed = true
         panelReady = false
         stopTimeout()
         webView?.stopLoading()
+        val tailscale = ConnectionFailurePolicy.showTailscaleHelp(current?.provider)
+        errorTitle.setText(if (tailscale) R.string.tailscale_error_title else R.string.connection_error_title)
+        errorDescription.setText(if (tailscale) R.string.tailscale_error_text else R.string.connection_error_text)
+        openTailscaleButton.visibility = if (tailscale) View.VISIBLE else View.GONE
+        if (tailscale) updateTailscaleActionText(openTailscaleButton)
         showOnly(errorPanel)
     }
 
@@ -500,10 +576,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onMainPageReady(url: String) {
-        stopTimeout()
-        if (webPanel.visibility != View.VISIBLE) return
+        if (!navigationPending || mainFrameFailed || navigationFailed ||
+            webPanel.visibility != View.VISIBLE) return
         val saved = current ?: return
         if (!ConnectionUrl.sameOrigin(saved.url, url)) return
+        stopTimeout()
         panelReady = true
         if (!store.hasShownConnectionHint()) {
             store.markConnectionHintShown()
@@ -520,11 +597,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startTimeout() {
-        stopTimeout()
+        if (navigationPending) return // No resetting deadline on redirects or repeated callbacks.
         navigationPending = true
+        mainFrameFailed = false
+        navigationFailed = false
         progress.visibility = View.VISIBLE
-        navigationTimeout = Runnable { if (navigationPending && webPanel.visibility == View.VISIBLE) showError() }
-            .also { handler.postDelayed(it, 30_000L) }
+        if (!panelReady) loadingState.visibility = View.VISIBLE
+        navigationTimeout = Runnable {
+            if (navigationPending && webPanel.visibility == View.VISIBLE) showError()
+        }.also { handler.postDelayed(it, ConnectionFailurePolicy.NAVIGATION_DEADLINE_MS) }
     }
 
     private fun stopTimeout() {
@@ -532,6 +613,7 @@ class MainActivity : ComponentActivity() {
         navigationTimeout?.let { handler.removeCallbacks(it) }
         navigationTimeout = null
         if (::progress.isInitialized) progress.visibility = View.GONE
+        if (::loadingState.isInitialized) loadingState.visibility = View.GONE
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density + 0.5f).toInt()
@@ -541,7 +623,7 @@ class MainActivity : ComponentActivity() {
         val browser = WebView(this)
         webView = browser
         webContainer.addView(browser, FrameLayout.LayoutParams(-1, -1))
-        browser.setBackgroundColor(Color.WHITE)
+        browser.setBackgroundColor(getColor(R.color.surface))
         browser.isVerticalScrollBarEnabled = false
         browser.isHorizontalScrollBarEnabled = false
         // Interacting with the original dashboard (including its drawer) dismisses the hint.
@@ -599,27 +681,32 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
-                if (webPanel.visibility == View.VISIBLE) startTimeout()
+                if (view === webView && webPanel.visibility == View.VISIBLE && !navigationPending &&
+                    current?.let { ConnectionUrl.sameOrigin(it.url, url) } == true) {
+                    // Subsequent full-page navigation gets its own deadline as well.
+                    startTimeout()
+                }
             }
 
             override fun onPageCommitVisible(view: WebView, url: String) {
-                onMainPageReady(url) // No waiting for video or WebSockets.
-            }
-
-            override fun onPageFinished(view: WebView, url: String) {
-                // Fallback if this WebView version does not report a visible commit.
-                if (navigationPending && view.progress == 100) onMainPageReady(url)
+                if (view === webView) onMainPageReady(url)
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                if (request.isForMainFrame && webPanel.visibility == View.VISIBLE) showError()
+                if (view === webView && request.isForMainFrame && webPanel.visibility == View.VISIBLE) {
+                    mainFrameFailed = true
+                    showError()
+                }
             }
 
             override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
                 // 401/403 may be the original login page. 5xx on the main page is unavailable.
-                if (request.isForMainFrame && (errorResponse.statusCode >= 500 ||
+                if (view === webView && request.isForMainFrame && (errorResponse.statusCode >= 500 ||
                     errorResponse.statusCode == 404 || errorResponse.statusCode == 410) &&
-                    webPanel.visibility == View.VISIBLE) showError()
+                    webPanel.visibility == View.VISIBLE) {
+                    mainFrameFailed = true
+                    showError()
+                }
             }
 
             override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
@@ -635,7 +722,7 @@ class MainActivity : ComponentActivity() {
                 webContainer.removeView(view)
                 view.destroy()
                 webView = null
-                showOnly(errorPanel)
+                showError()
                 return true
             }
         }

@@ -27,9 +27,9 @@
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
             <ImageView
-                android:layout_width="110dp"
-                android:layout_height="72dp"
-                android:layout_marginTop="14dp"
+                android:layout_width="128dp"
+                android:layout_height="76dp"
+                android:layout_marginTop="4dp"
                 android:src="@drawable/app_logo"
                 android:contentDescription="@string/app_name" />
             <TextView
@@ -44,24 +44,43 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
-                android:text="Centro de conexiones de tu vehículo"
+                android:text="Accede a OverDrive desde tu teléfono"
                 android:textColor="@color/muted"
                 android:textSize="14sp" />
 
-            <!-- On first launch the single form below is already visible. No duplicate manual-entry step. -->
+            <!-- Compact onboarding hero; the QR and URL are in ONE card below. -->
             <LinearLayout
                 android:id="@+id/firstRunPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="20dp"
+                android:padding="16dp"
+                android:background="@drawable/welcome_bg"
                 android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PRIMER ACCESO"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:textSize="10sp"
+                    android:textColor="@color/accent" />
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Escanea el QR de Acceso remoto en tu vehículo o pega su dirección. El tipo de conexión se detectará automáticamente cuando sea reconocible."
-                    android:lineSpacingExtra="3dp"
-                    android:textColor="@color/muted"
-                    android:textSize="14sp" />
+                    android:layout_marginTop="7dp"
+                    android:text="Conecta tu vehículo en segundos"
+                    android:textStyle="bold"
+                    android:textSize="17sp"
+                    android:textColor="@color/white" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="Utiliza el QR que aparece en Acceso remoto de OverDrive, o pega la dirección."
+                    android:lineSpacingExtra="2dp"
+                    android:textSize="13sp"
+                    android:textColor="@color/muted" />
             </LinearLayout>
 
             <LinearLayout
@@ -127,7 +146,7 @@
                 android:id="@+id/manualForm"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="14dp"
                 android:background="@drawable/card_bg"
                 android:orientation="vertical"
                 android:padding="18dp"
@@ -140,31 +159,56 @@
                     android:textStyle="bold"
                     android:textColor="@color/white"
                     android:textSize="18sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="La forma más rápida es escanear el QR del auto."
+                    android:textColor="@color/muted"
+                    android:textSize="12sp" />
                 <Button
                     android:id="@+id/scanButton"
                     android:layout_width="match_parent"
                     android:layout_height="54dp"
                     android:layout_marginTop="18dp"
                     android:background="@drawable/accent_button"
-                    android:text="Escanear QR del vehículo"
+                    android:text="▣  Escanear QR del vehículo"
                     android:textAllCaps="false"
                     android:textStyle="bold"
                     android:textColor="@color/surface" />
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="15dp"
-                    android:gravity="center"
-                    android:text="o pega la dirección de OverDrive"
-                    android:textColor="@color/muted"
-                    android:textSize="13sp" />
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/outline" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:text="O PEGA UNA URL"
+                        android:textColor="@color/muted"
+                        android:textSize="11sp" />
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/outline" />
+                </LinearLayout>
                 <EditText
                     android:id="@+id/urlInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="0dp"
                     android:background="@drawable/input_bg"
-                    android:hint="Pega la URL mostrada por OverDrive"
+                    android:hint="https://…  o  http://100.x.x.x"
                     android:inputType="textUri|textNoSuggestions"
                     android:singleLine="true"
                     android:selectAllOnFocus="true"
@@ -175,10 +219,48 @@
                     android:id="@+id/providerInfo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="El tipo de conexión se identificará automáticamente."
-                    android:textColor="@color/muted"
-                    android:textSize="12sp" />
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/detected_chip_bg"
+                    android:padding="11dp"
+                    android:text="Túnel detectado"
+                    android:textColor="@color/accent"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+                <!-- Visible only for verified Tailscale URLs or an explicit selection. -->
+                <LinearLayout
+                    android:id="@+id/tailscaleAdvice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/tailscale_advice_bg"
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="gone">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="ⓘ  Antes de conectar con Tailscale"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Instala Tailscale en este mismo teléfono y mantenlo conectado a la red del vehículo."
+                        android:textColor="@color/muted"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="2dp" />
+                    <Button
+                        android:id="@+id/tailscaleHelpButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/secondary_button"
+                        android:text="Abrir Tailscale"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white" />
+                </LinearLayout>
                 <LinearLayout
                     android:id="@+id/providerPicker"
                     android:layout_width="match_parent"
@@ -297,6 +379,42 @@
             android:textAllCaps="false"
             android:textSize="12sp"
             android:textColor="@color/white" />
+        <LinearLayout
+            android:id="@+id/loadingState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/surface"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:padding="24dp">
+            <ImageView
+                android:layout_width="108dp"
+                android:layout_height="72dp"
+                android:src="@drawable/app_logo"
+                android:contentDescription="@string/app_name" />
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:indeterminateTint="@color/accent" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:gravity="center"
+                android:text="Conectando con OverDrive…"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:gravity="center"
+                android:text="Esperando respuesta del vehículo"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+        </LinearLayout>
         <ProgressBar
             android:id="@+id/loadingProgress"
             style="?android:attr/progressBarStyleHorizontal"
@@ -322,6 +440,7 @@
             android:src="@drawable/app_logo"
             android:contentDescription="@string/app_name" />
         <TextView
+            android:id="@+id/errorTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
@@ -341,10 +460,20 @@
             android:textColor="@color/muted"
             android:textSize="15sp" />
         <Button
+            android:id="@+id/openTailscaleButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="23dp"
+            android:background="@drawable/secondary_button"
+            android:text="@string/open_tailscale"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:visibility="gone" />
+        <Button
             android:id="@+id/retryButton"
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/accent_button"
             android:textAllCaps="false"
             android:text="@string/retry"
