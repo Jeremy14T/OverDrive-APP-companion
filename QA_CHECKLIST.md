@@ -1,3 +1,16 @@
+# QA v1.9 — encabezado y QR (pendiente de Android real)
+
+- [ ] Primer acceso: logo centrado sin márgenes interiores enormes, título «OverDrive Companion» debajo y subtítulo centrado.
+- [ ] Vista de «Mis conexiones»: utiliza el mismo encabezado sin alterar el listado ni las estrellas favoritas.
+- [ ] Botón de escaneo: el QR se reconoce fácilmente y queda centrado junto al texto «Escanear código QR»; toda la superficie abre el lector ZXing.
+- [ ] Dispositivos angostos / tamaño de fuente aumentado: el título no se corta de forma ilegible y el botón sigue siendo pulsable.
+- [ ] QR válido autocompleta la URL y permite confirmar antes de guardar; QR cancelado no cambia preferencias.
+- [ ] El consejo de Tailscale aparece cuando corresponde; probar VPN apagada, VPN activa, reconexión, 10 s de carga y aviso contextual.
+- [ ] Abrir un perfil guardado, regresar a configuración, volver al panel: mantiene WebView y autenticación existente.
+- [ ] Verificar compilación `:app:testDebugUnitTest` y `:app:assembleDebug` en GitHub Actions.
+
+---
+
 ## Validaciones adicionales v1.7 (comprobar en dispositivo)
 
 - [ ] En la primera instalación, el logo queda a la izquierda del nombre «OverDrive Companion».

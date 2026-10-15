@@ -203,7 +203,7 @@ class MainActivity : ComponentActivity() {
         }
         onBackPressedDispatcher.addCallback(this, backHandler)
 
-        findViewById<Button>(R.id.scanButton).setOnClickListener { launchQr() }
+        findViewById<View>(R.id.scanButton).setOnClickListener { launchQr() }
         findViewById<Button>(R.id.addQrButton).setOnClickListener { launchQr() }
         findViewById<Button>(R.id.addManualButton).setOnClickListener { openForm(null) }
         findViewById<Button>(R.id.cancelEditButton).setOnClickListener { closeForm() }

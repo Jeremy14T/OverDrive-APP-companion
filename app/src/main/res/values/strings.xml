@@ -5,7 +5,16 @@
     <string name="setup_hint">Conecta con el panel de OverDrive instalado en tu BYD. La aplicación no configura el túnel.</string>
     <string name="address_label">Dirección de OverDrive</string>
     <string name="url_hint">https://tu-enlace-del-vehiculo</string>
-    <string name="scan_qr">Escanear QR del automóvil</string>
+    <string name="scan_qr">Escanear código QR</string>
+    <string name="scan_more_qr">Escanear otro código QR</string>
+    <string name="onboarding_tagline">Tu acceso rápido a OverDrive</string>
+    <string name="onboarding_welcome_title">Conecta tu vehículo en segundos</string>
+    <string name="onboarding_welcome_message">Escanea el código QR de Acceso remoto en OverDrive o pega su dirección.</string>
+    <string name="onboarding_form_hint">La forma más rápida es escanear el QR que muestra OverDrive.</string>
+    <string name="onboarding_manual_divider">o ingresa la dirección manualmente</string>
+    <string name="onboarding_url_example">Ej. http://100.x.x.x:8080</string>
+    <string name="onboarding_name_label">Nombre de la conexión (opcional)</string>
+    <string name="onboarding_name_example">Ej. Mi BYD</string>
     <string name="connect">Conectar</string>
     <string name="connection_error_title">Sin conexión al vehículo</string>
     <string name="connection_error_text">No se pudo conectar con OverDrive. Comprueba la conexión del vehículo, el túnel y que la dirección siga vigente.</string>

@@ -1,3 +1,17 @@
+# OverDrive Companion — actualización v1.9.0 (interfaz)
+
+Esta actualización es **solo de presentación** y parte del proyecto completo **v1.8.0**.
+
+- Identidad de acceso rediseñada: logo centrado, nombre «OverDrive Companion» debajo y subtítulo «Tu acceso rápido a OverDrive». Se usa igual en primera configuración y en el listado de conexiones.
+- El logo del encabezado utiliza `drawable-nodpi/app_logo_header.png`, un recorte sin los márgenes transparentes de la imagen anterior. El logo original `app_logo.png` se conserva para las otras pantallas.
+- Botón principal con código QR vectorial reconocible, icono y texto **centrados como un grupo**: «Escanear código QR». El escáner ZXing sigue siendo el mismo; solo cambia la vista que invoca `launchQr()`.
+- Mensajes de primera conexión, separador, ejemplo URL y campo de nombre abreviados. No se incrusta ninguna dirección real del usuario en el código.
+- Se conservan inalterados el almacenamiento de perfiles, favoritos, última conexión, cookies y WebView, comprobación de Tailscale, timeout de 10 s, navegación y GitHub Actions.
+
+**Validación:** análisis estático de XML, recursos e IDs y pruebas Kotlin/JVM disponibles. La compilación APK y la verificación visual en Android se deben realizar con el workflow del repositorio.
+
+---
+
 ## Actualización v1.7.0 — Favoritas y cabecera
 
 - En todas las pantallas de configuración (primera vez y conexiones guardadas), el logo aparece a la izquierda y el nombre «OverDrive Companion» a su derecha.

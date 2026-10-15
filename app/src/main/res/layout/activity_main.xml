@@ -26,48 +26,38 @@
                 android:text="@string/back_to_panel"
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
-            <!-- One shared header for both first-time setup and saved connections. -->
+            <!-- Shared, compact vertical identity for first setup and saved connections. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
                 <ImageView
-                    android:layout_width="112dp"
-                    android:layout_height="84dp"
-                    android:src="@drawable/app_logo"
+                    android:layout_width="180dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/app_logo_header"
                     android:scaleType="fitCenter"
                     android:contentDescription="@string/app_name" />
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="12dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="OverDrive"
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
-                        android:textSize="23sp" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Companion"
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
-                        android:textSize="22sp" />
-                </LinearLayout>
+                    android:layout_marginTop="5dp"
+                    android:gravity="center"
+                    android:text="@string/app_name"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:textSize="24sp"
+                    android:maxLines="2" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="@string/onboarding_tagline"
+                    android:textColor="@color/muted"
+                    android:textSize="14sp" />
             </LinearLayout>
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Accede a OverDrive desde tu teléfono"
-                android:textColor="@color/muted"
-                android:textSize="14sp" />
 
             <!-- Compact onboarding hero; the QR and URL are in ONE card below. -->
             <LinearLayout
@@ -90,7 +80,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="7dp"
-                    android:text="Conecta tu vehículo en segundos"
+                    android:text="@string/onboarding_welcome_title"
                     android:textStyle="bold"
                     android:textSize="17sp"
                     android:textColor="@color/white" />
@@ -98,7 +88,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="Utiliza el QR que aparece en Acceso remoto de OverDrive, o pega la dirección."
+                    android:text="@string/onboarding_welcome_message"
                     android:lineSpacingExtra="2dp"
                     android:textSize="13sp"
                     android:textColor="@color/muted" />
@@ -147,7 +137,7 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/accent_button"
-                    android:text="Escanear otro QR"
+                    android:text="@string/scan_more_qr"
                     android:drawableStart="@drawable/ic_qr_code"
                     android:drawableTint="@color/surface"
                     android:drawablePadding="10dp"
@@ -188,23 +178,36 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="La forma más rápida es escanear el QR del auto."
+                    android:text="@string/onboarding_form_hint"
                     android:textColor="@color/muted"
                     android:textSize="12sp" />
-                <Button
+                <!-- Keep the QR glyph and label centered as a single click target. -->
+                <LinearLayout
                     android:id="@+id/scanButton"
                     android:layout_width="match_parent"
-                    android:layout_height="54dp"
-                    android:layout_marginTop="18dp"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="16dp"
                     android:background="@drawable/accent_button"
-                    android:text="@string/scan_qr"
-                    android:drawableStart="@drawable/ic_qr_code"
-                    android:drawableTint="@color/surface"
-                    android:drawablePadding="10dp"
+                    android:orientation="horizontal"
                     android:gravity="center"
-                    android:textAllCaps="false"
-                    android:textStyle="bold"
-                    android:textColor="@color/surface" />
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="@string/scan_qr">
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/ic_qr_code"
+                        android:importantForAccessibility="no" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="@string/scan_qr"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/surface"
+                        android:importantForAccessibility="no" />
+                </LinearLayout>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -222,7 +225,7 @@
                         android:layout_height="wrap_content"
                         android:paddingStart="14dp"
                         android:paddingEnd="14dp"
-                        android:text="O PEGA UNA URL"
+                        android:text="@string/onboarding_manual_divider"
                         android:textColor="@color/muted"
                         android:textSize="11sp" />
                     <View
@@ -237,7 +240,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="0dp"
                     android:background="@drawable/input_bg"
-                    android:hint="https://…  o  http://100.x.x.x"
+                    android:hint="@string/onboarding_url_example"
                     android:inputType="textUri|textNoSuggestions"
                     android:singleLine="true"
                     android:selectAllOnFocus="true"
@@ -336,7 +339,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="17dp"
-                    android:text="Nombre para identificarla (opcional)"
+                    android:text="@string/onboarding_name_label"
                     android:textColor="@color/white"
                     android:textSize="13sp" />
                 <EditText
@@ -345,7 +348,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="7dp"
                     android:background="@drawable/input_bg"
-                    android:hint="Ej. Mi BYD"
+                    android:hint="@string/onboarding_name_example"
                     android:inputType="textCapSentences"
                     android:maxLength="50"
                     android:singleLine="true"
