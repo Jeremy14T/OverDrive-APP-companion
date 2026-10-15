@@ -21,6 +21,10 @@
     <string name="exit_app">Salir</string>
     <string name="cancel_action">Cancelar</string>
     <string name="connection_shortcut">⚙ Conexión</string>
+    <string name="tailscale_vpn_notice_title">Comprueba Tailscale en tu teléfono</string>
+    <string name="tailscale_vpn_notice_message">Android no detecta una VPN activa para esta aplicación. Si utilizas la dirección privada de Tailscale, abre Tailscale y conecta tu teléfono a la misma red del vehículo. Esto no confirma que Tailscale esté apagado: puedes intentar conectar de todos modos.</string>
+    <string name="connect_anyway">Conectar de todos modos</string>
+    <string name="my_connections">Mis conexiones</string>
     <string name="tailscale_error_title">No se pudo abrir OverDrive por Tailscale</string>
     <string name="tailscale_error_text">Comprueba que Tailscale esté instalado y conectado en este teléfono, que la conexión Tailscale esté disponible en el vehículo y que la dirección siga siendo válida. No podemos determinar cuál de estas causas provocó el error.</string>
     <string name="open_tailscale">Abrir Tailscale</string>

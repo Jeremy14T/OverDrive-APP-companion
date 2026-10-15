@@ -3,7 +3,10 @@ package mx.overdrive.companion
 import android.Manifest
 import android.app.AlertDialog
 import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -26,6 +29,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ProgressBar
@@ -92,6 +96,8 @@ class MainActivity : ComponentActivity() {
     private var navigationPending = false
     private var mainFrameFailed = false
     private var navigationFailed = false
+    // Set only after opening the Tailscale app from the preflight warning.
+    private var awaitingTailscaleReturn = false
     private var panelReady = false
     private var hideHintTask: Runnable? = null
     private var fileChooser: ValueCallback<Array<Uri>>? = null
@@ -349,9 +355,13 @@ class MainActivity : ComponentActivity() {
         val favoriteId = store.favoriteId()
         val lastId = store.lastId()
         val pinned = store.isFavoritePinned()
-        findViewById<TextView>(R.id.startupModeLabel).text = if (pinned)
-            "Al iniciar se abrirá tu favorita marcada. Puedes cambiarla tocando ★ en otra conexión."
-            else "Inicio rápido: se abre la última utilizada. La primera que guardaste quedó como favorita inicial."
+        findViewById<TextView>(R.id.startupModeLabel).text = when {
+            pinned && favoriteId != null ->
+                "Al iniciar se abrirá la favorita. Puedes cambiarla tocando la estrella de otra conexión."
+            favoriteId == null ->
+                "Sin favorita: al iniciar se abrirá la última utilizada. Toca una estrella para elegir favorita."
+            else -> "Inicio rápido: se abre la última utilizada. La estrella indica tu favorita inicial."
+        }
         findViewById<Button>(R.id.useLastButton).visibility = if (pinned) View.VISIBLE else View.GONE
         profiles.forEach { saved ->
             val card = LinearLayout(this).apply {
@@ -360,22 +370,62 @@ class MainActivity : ComponentActivity() {
                 setBackgroundResource(R.drawable.card_bg)
                 layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) }
             }
+            // Keep favorite control in the upper-right corner of its own connection card.
+            // An ImageButton provides a 48dp touch target without an extra action-row button.
+            val heading = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            heading.addView(TextView(this).apply {
+                text = saved.label
+                setTextColor(getColor(R.color.white))
+                textSize = 17f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+            })
+            val isFavorite = saved.id == favoriteId
+            heading.addView(ImageButton(this).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+                    marginStart = dp(6)
+                }
+                setImageResource(if (isFavorite) R.drawable.favorite_star_filled
+                    else R.drawable.favorite_star_outline)
+                scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+                // Native ripple feedback; no permanent visual button frame.
+                val ripple = android.util.TypedValue()
+                if (theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, ripple, true)
+                    && ripple.resourceId != 0) {
+                    setBackgroundResource(ripple.resourceId)
+                } else setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                contentDescription = if (isFavorite) "Quitar ${saved.label} de favoritas"
+                    else "Marcar ${saved.label} como favorita"
+                setOnClickListener {
+                    if (isFavorite) {
+                        store.clearFavorite(saved.id)
+                        toast("Se abrirá la última conexión utilizada")
+                    } else {
+                        store.setFavorite(saved.id)
+                        toast("${saved.label}: favorita para siguientes aperturas")
+                    }
+                    // Refresh all cards so that exactly one star can remain filled.
+                    renderProfiles()
+                }
+            })
+            card.addView(heading)
             val badges = buildList {
-                add(saved.provider.displayName)
-                if (saved.id == favoriteId) add("★ Favorita")
+                if (!saved.label.equals(saved.provider.displayName, ignoreCase = true)) {
+                    add(saved.provider.displayName)
+                }
                 if (saved.id == lastId) add("Última usada")
                 if (saved.id == current?.id && canReturnToPanel()) add("Abierta")
             }.joinToString("  ·  ")
-            card.addView(TextView(this).apply {
-                text = saved.label
-                setTextColor(getColor(R.color.white)); textSize = 17f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-            })
-            card.addView(TextView(this).apply {
-                text = badges
-                setTextColor(getColor(R.color.accent)); textSize = 12f
-                setPadding(0, dp(4), 0, dp(3))
-            })
+            if (badges.isNotEmpty()) {
+                card.addView(TextView(this).apply {
+                    text = badges
+                    setTextColor(getColor(R.color.accent)); textSize = 12f
+                    setPadding(0, 0, 0, dp(3))
+                })
+            }
             card.addView(TextView(this).apply {
                 // Keep the full URL visible for human confirmation, but do not log it.
                 text = saved.url
@@ -388,11 +438,6 @@ class MainActivity : ComponentActivity() {
                 setPadding(0, dp(9), 0, 0)
             }
             buttons.addView(actionButton("Abrir", true) { useProfile(saved) })
-            buttons.addView(actionButton(if (saved.id == favoriteId) "★" else "☆", false) {
-                store.setFavorite(saved.id)
-                renderProfiles()
-                toast("${saved.label}: favorita para siguientes aperturas")
-            }.apply { contentDescription = "Elegir ${saved.label} como favorita al iniciar" })
             buttons.addView(actionButton("Probar", false) { testProfile(saved, card) })
             card.addView(buttons)
             card.addView(actionButton("Editar dirección", false) { openForm(saved) }.apply {
@@ -529,11 +574,36 @@ class MainActivity : ComponentActivity() {
         backHandler.isEnabled = panel !== setupPanel || canReturnToPanel() || manualForm.visibility == View.VISIBLE
     }
 
-    private fun loadPanel() {
+    private fun loadPanel(skipVpnAdvisory: Boolean = false) {
         val saved = current ?: run { showSetup(); return }
-        // A timed-out/failed WebView can send late callbacks. Recreate only on retry;
-        // CookieManager and saved profiles remain untouched.
+        // A failed main-frame WebView must be reset BEFORE a preflight dialog
+        // changes panels; otherwise the retry could reuse a timed-out browser.
         if (errorPanel.visibility == View.VISIBLE) resetWebView()
+        if (!skipVpnAdvisory && TailscalePreflightPolicy.shouldWarn(
+                saved.provider, detectActiveVpn())) {
+            // Advisory only: Android cannot prove which VPN is active, and some
+            // private routes work without appearing as the phone's active VPN.
+            showSetup()
+            AlertDialog.Builder(this)
+                .setTitle(R.string.tailscale_vpn_notice_title)
+                .setMessage(R.string.tailscale_vpn_notice_message)
+                .setPositiveButton(R.string.open_tailscale) { _, _ ->
+                    awaitingTailscaleReturn = true
+                    openTailscale()
+                }
+                .setNeutralButton(R.string.connect_anyway) { _, _ ->
+                    awaitingTailscaleReturn = false
+                    loadPanel(skipVpnAdvisory = true)
+                }
+                .setNegativeButton(R.string.my_connections) { _, _ ->
+                    awaitingTailscaleReturn = false
+                }
+                .show()
+            return
+        }
+        awaitingTailscaleReturn = false
+        // Preserve CookieManager and all saved profiles; a failed view was
+        // already replaced above, before showing any VPN advice.
         panelReady = false
         stopTimeout()
         mainFrameFailed = false
@@ -543,6 +613,20 @@ class MainActivity : ComponentActivity() {
         // Start the deadline BEFORE loadUrl: WebView may never call onPageStarted on bad networks.
         startTimeout()
         webView?.loadUrl(saved.url)
+    }
+
+    /** null means the OS cannot provide a reliable answer; proceed with normal loading. */
+    private fun detectActiveVpn(): Boolean? {
+        return try {
+            val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val active = manager.activeNetwork
+            if (active == null) false
+            else manager.getNetworkCapabilities(active)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        } catch (_: SecurityException) {
+            null
+        } catch (_: RuntimeException) {
+            null
+        }
     }
 
     private fun showError() {
@@ -824,6 +908,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         webView?.onResume()
+        // Coming back from Tailscale: re-check once. Only automatically retry if
+        // Android now reports an active VPN; never loop or auto-open a failed URL.
+        if (awaitingTailscaleReturn) {
+            awaitingTailscaleReturn = false
+            if (TailscalePreflightPolicy.shouldAutoRetry(current?.provider, detectActiveVpn())) {
+                loadPanel()
+            }
+        }
     }
 
     override fun onDestroy() {

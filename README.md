@@ -1,3 +1,11 @@
+## Actualización v1.7.0 — Favoritas y cabecera
+
+- En todas las pantallas de configuración (primera vez y conexiones guardadas), el logo aparece a la izquierda y el nombre «OverDrive Companion» a su derecha.
+- En cada tarjeta de conexión, la estrella está arriba a la derecha: contorno si no es favorita, rellena si es favorita.
+- Solo hay una favorita a la vez; al marcar otra se desmarca automáticamente la anterior.
+- Al tocar una estrella rellena se quita esa favorita, y el inicio rápido pasa a utilizar la última conexión usada. La primera conexión guardada se sigue marcando automáticamente como favorita inicial.
+- Se mantienen intactos el QR, los túneles, la autenticación del WebView y el temporizador/error de v1.6.
+
 # OverDrive Companion — Android (v1.6.0)
 
 ## Actualización v1.6 — inicio visual y recuperación de Tailscale
@@ -169,3 +177,15 @@ Este proyecto **no incluye, modifica ni redistribuye el código ni recursos de O
 - Prueba `HEAD` con timeout y sin cookies, UI no bloqueante. Una respuesta HTTP no acredita autenticación ni disponibilidad interna del túnel.
 - Mantiene el WebView, la corrección de insets, su navegación, el botón temporal superior derecho, los recursos del ícono v1.3 y el workflow de GitHub Actions.
 - **Validación realizada aquí**: XML/referencias de recursos revisados y lógica `ConnectionUrl`, detección QR, `ProfileChoice` y `ConnectionProbe` compiladas con Kotlin/JVM; **compilación APK y pruebas en Android pendientes** hasta ejecutar GitHub Actions y probar el vehículo real.
+
+## Versión 1.8.0 — Aviso previo de VPN e icono QR
+
+- Al abrir un perfil **Tailscale**, Android consulta el estado de la red activa mediante `ConnectivityManager` y `NetworkCapabilities.TRANSPORT_VPN` (permiso normal `ACCESS_NETWORK_STATE`, sin diálogos de permiso adicionales).
+- Si **no se detecta VPN activa**, se muestra inmediatamente un diálogo con tres opciones: **Abrir Tailscale**, **Conectar de todos modos** y **Mis conexiones**. **No afirma** que Tailscale esté desactivado, porque la comprobación no identifica a qué aplicación pertenece una VPN ni garantiza conectividad con el vehículo. Una conexión válida puede funcionar aun cuando Android no exponga el transporte VPN.
+- Al regresar de Tailscale, se vuelve a comprobar **una vez**. Si Android ya informa VPN activa, se intenta cargar el panel; si no, la app permanece en Mis conexiones y puedes intentar abrirlo manualmente.
+- Si hay VPN (o el estado es indeterminado), la carga sigue como siempre y conserva el **timeout de 10 segundos** y el mensaje especial al fallar el servidor Tailscale.
+- Cloudflare y Zrok mantienen su comportamiento anterior. Ninguna comprobación modifica los túneles del coche, sus claves, cookies ni el panel original.
+- Se añadió un vector QR nativo `res/drawable/ic_qr_code.xml` con tres patrones de esquina y módulos, utilizado en las acciones de escanear QR. No cambia el lector ZXing ni la identificación del proveedor.
+- La lógica de aviso/retorno se separó en `TailscalePreflightPolicy.kt`, con pruebas JVM/JUnit. Los pasos de compilación del workflow **no fueron modificados**.
+
+**Prueba en teléfono:** primero abre el APK con Tailscale desconectado (debería aparecer el aviso antes del WebView), pulsa **Conectar de todos modos** (debería continuar y usar el error a los 10 s si no responde), y prueba **Abrir Tailscale** activándolo y volviendo a Companion. Comprueba también con Tailscale ya activo y con un perfil Zrok/Cloudflare. Las pruebas JVM por sí solas no verifican cómo informa Android sobre VPN en tu modelo de teléfono.

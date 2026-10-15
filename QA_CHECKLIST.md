@@ -1,3 +1,13 @@
+## Validaciones adicionales v1.7 (comprobar en dispositivo)
+
+- [ ] En la primera instalación, el logo queda a la izquierda del nombre «OverDrive Companion».
+- [ ] En la sección «Mis conexiones», la cabecera usa la misma disposición.
+- [ ] La estrella está arriba a la derecha de cada tarjeta; inicialmente solo la primera conexión aparece con estrella rellena.
+- [ ] Al marcar otra conexión, la estrella anterior queda en contorno y solo la nueva queda rellena.
+- [ ] Al tocar la estrella rellena se desmarca y la app utiliza la última usada para el siguiente inicio.
+- [ ] El botón «Abrir» sigue entrando al túnel correcto y «Probar» sigue disponible.
+- [ ] Tras volver desde configuración, la sesión y el WebView continúan sin recarga si no se cambia de URL.
+
 # QA v1.6 — UI de ingreso, ayuda de Tailscale y error en 10 segundos
 
 ## Nuevas verificaciones de v1.6 (pendientes en Android real)
@@ -91,3 +101,17 @@
 11. **Cambio de origen**: al pasar de Tailscale a Zrok puede pedirse nueva autenticación original. No borrar cookies ni alterar OverDrive en el vehículo.
 12. **QR/cámara, video/audio, teclado/insets, páginas internas y menú lateral**: repetir las pruebas v1.3.
 13. **Compilación real**: verificar GitHub Actions `:app:testDebugUnitTest` y `:app:assembleDebug`, luego instalar y probar en teléfono.
+
+## Regresión v1.8.0 — preflight VPN e icono QR
+
+- [ ] Al abrir un perfil Tailscale sin VPN visible para Android, aparece el aviso **sin esperar 10 s**.
+- [ ] El aviso dice «Android no detecta una VPN activa», sin afirmar que Tailscale esté desactivado.
+- [ ] **Conectar de todos modos** permite cargar el WebView aun sin VPN; si no responde, aparece el error Tailscale en 10 s.
+- [ ] **Abrir Tailscale** abre la app oficial o tienda; al regresar con VPN activa se vuelve a intentar una sola vez.
+- [ ] **Mis conexiones** vuelve al administrador sin borrar URL, favorita, última utilizada ni cookies.
+- [ ] Tailscale con VPN detectada no muestra aviso previo y carga normalmente.
+- [ ] Cloudflare y Zrok no muestran aviso de Tailscale (siguen con su error genérico).
+- [ ] El botón Escanear QR de la primera pantalla muestra un dibujo QR reconocible (tres localizadores), no `▣`.
+- [ ] El botón Escanear otro QR usa el mismo icono; el lector abre y devuelve la URL como antes.
+- [ ] Las funciones de Atrás, Volver al panel, inicio rápido, favoritos y WebView siguen funcionando.
+- [ ] GitHub Actions ejecuta `:app:testDebugUnitTest` y `:app:assembleDebug`, e instala el APK para validar en teléfono.

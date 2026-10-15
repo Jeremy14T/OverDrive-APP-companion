@@ -26,24 +26,45 @@
                 android:text="@string/back_to_panel"
                 android:textAllCaps="false"
                 android:textColor="@color/white" />
-            <ImageView
-                android:layout_width="128dp"
-                android:layout_height="76dp"
-                android:layout_marginTop="4dp"
-                android:src="@drawable/app_logo"
-                android:contentDescription="@string/app_name" />
+            <!-- One shared header for both first-time setup and saved connections. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="112dp"
+                    android:layout_height="84dp"
+                    android:src="@drawable/app_logo"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="@string/app_name" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="OverDrive"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="23sp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Companion"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:textSize="22sp" />
+                </LinearLayout>
+            </LinearLayout>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="OverDrive Companion"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:textSize="25sp" />
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="8dp"
                 android:text="Accede a OverDrive desde tu teléfono"
                 android:textColor="@color/muted"
                 android:textSize="14sp" />
@@ -126,7 +147,11 @@
                     android:layout_height="50dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/accent_button"
-                    android:text="+ Escanear otro QR"
+                    android:text="Escanear otro QR"
+                    android:drawableStart="@drawable/ic_qr_code"
+                    android:drawableTint="@color/surface"
+                    android:drawablePadding="10dp"
+                    android:gravity="center"
                     android:textAllCaps="false"
                     android:textStyle="bold"
                     android:textColor="@color/surface" />
@@ -172,7 +197,11 @@
                     android:layout_height="54dp"
                     android:layout_marginTop="18dp"
                     android:background="@drawable/accent_button"
-                    android:text="▣  Escanear QR del vehículo"
+                    android:text="@string/scan_qr"
+                    android:drawableStart="@drawable/ic_qr_code"
+                    android:drawableTint="@color/surface"
+                    android:drawablePadding="10dp"
+                    android:gravity="center"
                     android:textAllCaps="false"
                     android:textStyle="bold"
                     android:textColor="@color/surface" />

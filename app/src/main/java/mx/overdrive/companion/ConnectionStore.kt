@@ -72,7 +72,9 @@ internal class ConnectionStore(context: Context) {
         val index = items.indexOfFirst { it.id == updated.id }
         if (index >= 0) items[index] = updated else items.add(updated)
         val edit = prefs.edit().putString("profiles_json", serialize(items))
-        if (items.size == 1) {
+        // Only a newly created first profile gets the automatic initial favorite.
+        // Editing an existing profile must not re-star it after the user unmarked it.
+        if (items.size == 1 && index < 0) {
             edit.putString("favorite_id", updated.id)
                 .putBoolean("favorite_pinned", false)
         }
@@ -89,6 +91,14 @@ internal class ConnectionStore(context: Context) {
     fun setFavorite(id: String) {
         if (all().any { it.id == id }) prefs.edit().putString("favorite_id", id)
             .putBoolean("favorite_pinned", true).apply()
+    }
+
+    /** Unmark the currently starred tunnel; do not select a different favorite silently. */
+    fun clearFavorite(id: String) {
+        if (favoriteId() == id) prefs.edit()
+            .remove("favorite_id")
+            .putBoolean("favorite_pinned", false)
+            .apply()
     }
 
     /** Resume auto-opening the last selected tunnel (keep the favourite label). */
